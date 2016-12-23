@@ -15,6 +15,8 @@ require_once 'data.csv.php';
  */
 class AppLog implements IApp
 {
+	private $_snrGroundFix = 8;
+	
 	private $_fileHandle = null, $_filePath = './log/', $_filename = '', $_assort = 1;
 	private $_limitLineSizeMax = 1024;
 	
@@ -102,14 +104,15 @@ class AppLog implements IApp
 							'lng' => $lng,
 							'signal' => $signal,
 							'noise' => $noise,
-							'rx' => $rxthrpt,
+							'rx' => (float) number_format($rxthrpt, 3),
 							'rxmcs' => $rxmcs,
-							'tx' => $txthrpt,
+							'tx' => (float) number_format($txthrpt, 3),
 							'txmcs' => $txmcs,
 							'speed' => $speed
 					);
-					$_result['data']['points'][] = $point;
+					
 					$this->calcPointStat($point);
+					$_result['data']['points'][] = $point;
 					
 					$i ++;
 				}
@@ -163,55 +166,104 @@ class AppLog implements IApp
 		return $_result;
 	}
 	
-	private function calcPointStat($point)
+	private function calcPointStat(& $point)
 	{
+		$level = 0;
 		switch($this->_assort) {
 			case 4:
-				$this->calcPointByPER($point);
+				$level = $this->calcPointByPER($point);
 				break;
 			case 3:
-				$this->calcPointByNoise($point);
+				$level = $this->calcPointByNoise($point);
 				break;
 			case 2:
-				$this->calcPointBySNR($point);
+				$level = $this->calcPointBySNR($point);
 				break;
 			case 1:
 			default:
-				$this->calcPointByThrpt($point);
+				$level = $this->calcPointByThrpt($point);
 				break;
 		}
+		
+		if ($level >= 7) 	$level = 7;
+		if ($level < 0)		$level = 0;
+		switch($level) {
+			case 7:
+			case 6:
+			case 5:
+			case 4:
+				$this->_pointStat['strong'] ++;
+				break;
+			case 3:
+			case 2:
+				$this->_pointStat['normal'] ++;
+				break;
+			case 1:
+				$this->_pointStat['weak'] ++;
+				break;
+			case 0:
+			default:
+				$this->_pointStat['bad'] ++;
+				break;
+		}
+		$point['level'] = $level;
 		$this->_pointStat['total'] ++; // total
 	}
 	
 	private function calcPointByThrpt($point)
 	{
+		$level = 0;
+		
 		$thrpt = $point['tx'] + $point['rx'];
-		if ($thrpt < 0.3)						$this->_pointStat['bad'] ++;
-		if ($thrpt >= 0.3 && $thrpt < 0.8) 		$this->_pointStat['weak'] ++;
-		if ($thrpt >= 0.8 && $thrpt < 1500) 	$this->_pointStat['normal'] ++;
-		if ($thrpt >= 1500) 					$this->_pointStat['strong'] ++;
+		if ($thrpt < 0.3)						$level = 0;
+		if ($thrpt >= 0.3 && $thrpt < 0.8) 		$level = 1;
+		if ($thrpt >= 0.8 && $thrpt < 1.5) 		$level = 2;
+		if ($thrpt >= 1.5 && $thrpt < 2.0) 		$level = 3;
+		if ($thrpt >= 2.0 && $thrpt < 2.5) 		$level = 4;
+		if ($thrpt >= 2.5 && $thrpt < 3.0) 		$level = 5;
+		if ($thrpt >= 3.0 && $thrpt < 4.0) 		$level = 6;
+		if ($thrpt >= 4.0) 						$level = 7;
+		
+		return $level;
 	}
 	
 	private function calcPointBySNR($point)
 	{
 		$snr = $point['signal'] - $point['noise'];
-		if ($snr < 6) 							$this->_pointStat['bad'] ++;
-		if ($snr >= 6 && $snr < 12) 			$this->_pointStat['weak'] ++;
-		if ($snr >= 12 && $snr < 24) 			$this->_pointStat['normal'] ++;
-		if ($snr >= 24) 						$this->_pointStat['strong'] ++;
+		
+		// snr calibrate
+		$snr -= $this->_snrGroundFix; 
+		
+		$level = 0;
+		if ($snr < 6) 							$level = 0;
+		if ($snr >= 6 && $snr < 12) 			$level = 1;
+		if ($snr >= 12 && $snr < 18) 			$level = 2;
+		if ($snr >= 18 && $snr < 24) 			$level = 3;
+		if ($snr >= 24 && $snr < 30) 			$level = 4;
+		if ($snr >= 30 && $snr < 36) 			$level = 5;
+		if ($snr >= 36 && $snr < 42) 			$level = 6;
+		if ($snr >= 42) 						$level = 7;
+		
+		return $level;
 	}
 	private function calcPointByNoise($point)
 	{
 		$noise = $point['noise'];
-		if ($noise >= -60) 						$this->_pointStat['bad'] ++;
-		if ($noise < -60 && $noise >= -90) 		$this->_pointStat['weak'] ++;
-		if ($noise < -90 && $noise >= -95) 		$this->_pointStat['normal'] ++;
-		if ($noise < -95)				 		$this->_pointStat['strong'] ++;
+		
+		$level = 0;
+		if ($noise >= -60) 						$level = 0;
+		if ($noise < -60 && $noise >= -70) 		$level = 2;
+		if ($noise < -70 && $noise >= -80) 		$level = 3;
+		if ($noise < -80 && $noise >= -90) 		$level = 4;
+		if ($noise < -90 && $noise >= -95) 		$level = 5;
+		if ($noise < -95)				 		$level = 6;
+		
+		return $level;
 	}
 	private function calcPointByPER($point)
 	{
 		// TODO: add PER support for ART2 test
-		$this->_pointStat['strong'] ++;
+		return 7;
 	}
 }
 

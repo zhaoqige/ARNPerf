@@ -89,15 +89,13 @@ var _bingMap = null, _mapConfig = null;
 			//console.dir(data);
 			if ($.isArray(data)) {
 				console.log('$.MicrosoftMap.icons(): update');
+				console.dir(data);
 				bMap.entities.clear();
 				
 				var idx = 0;
 				for(idx in data) {
 					var pos = new this.pos(data[idx].lat, data[idx].lng);
-					//var pin = new this.pushpin(pos, 'res/icon-' + data[idx].slvl + '.png');
-					//var pin = new this.pushpin(bMap.getCenter(), null);
-					var pin = new Microsoft.Maps.Pushpin(bMap.getCenter(), null);
-					console.dir(pin); // TODO: 
+					var pin = new this.pushpin(pos, 'res/icon-' + data[idx].level + '.png');
 					//Microsoft.Maps.Events.addHandler(pin, 'click', this.showInfobox);
 					bMap.entities.push(pin);
 				}
