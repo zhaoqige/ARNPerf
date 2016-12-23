@@ -74,6 +74,7 @@ var _bingMap = null, _mapConfig = null;
 // TODO: add Pushpin at every point (with icon), add Infobox when clicked.
 (function($) {
 	$.MicrosoftMap = {
+		map: null,
 		init: function(obj, center, dbg) {
 			//console.log('$.MicrosoftMap.init()');
 			return new Microsoft.Maps.Map(obj, {
@@ -85,37 +86,50 @@ var _bingMap = null, _mapConfig = null;
 			});
 		},
 		sync: function(bMap, data) {
-			console.log('$.MicrosoftMap.sync()');
+			//console.log('$.MicrosoftMap.sync()');
 			//console.dir(data);
 			if ($.isArray(data)) {
-				console.log('$.MicrosoftMap.icons(): update');
+				//console.log('$.MicrosoftMap.icons(): update');
+				this.map = bMap;
 				bMap.entities.clear();
 				
 				var idx = 0;
 				for(idx in data) {
-					var pos = new this.pos(data[idx].lat, data[idx].lng);
-					//var pin = new this.pushpin(pos, 'res/icon-' + data[idx].slvl + '.png');
-					//var pin = new this.pushpin(bMap.getCenter(), null);
-					var pin = new Microsoft.Maps.Pushpin(bMap.getCenter(), null);
-					console.dir(pin); // TODO: 
-					//Microsoft.Maps.Events.addHandler(pin, 'click', this.showInfobox);
+					var obj = data[idx];
+					var msg1 = idx + ' | ' + obj.signal + '/' + obj.noise + '/' + (obj.signal - obj.noise) + ' (unit: dBm)';
+					var rx = obj.rx + ' Mbps (' + obj.rxmcs + ')';
+					var tx = obj.tx + ' Mbps (' + obj.txmcs + ')';
+					var ext = obj.ts + ' | ' + obj.speed + ' Km/h';
+					var msg = msg1 + ' | ' + rx + ' | ' + tx + ' | ' + ext;
+					var pos = this.pos(obj.lat, obj.lng);
+
+					var pin = this.pushpin(pos, 'res/icon-' + obj.level + '.png');
+
+					pin.idx = idx;
+					pin.msg = msg;
+
+					Microsoft.Maps.Events.addHandler(pin, 'click', this.showInfobox);
 					bMap.entities.push(pin);
 				}
 			} else {
 				//console.log('$.MicrosoftMap.icons(): default');
-				var dev = this.infobox(bMap.getCenter(), 'Designed by 6WiLink Qige', 
+				var devInfobox = this.infobox(bMap.getCenter(), 'Designed by 6WiLink Qige', 
 						'Address: Suit 3B-1102/1105, Z-Park, Haidian Dist., Beijing, China', true);
-				bMap.entities.push(dev);
+				devInfobox.setOptions({ showCloseButton: false });
+				this.map.entities.push(devInfobox);
 			}
 		},
 		showInfobox: function(e) {
-			console.dir(e);
-		},
-		// FIXME: pass event & params at same time
-		infobox: function(center, title, msg, visible) {
-			return (new Microsoft.Maps.Infobox(center, { 
-				title: title, description: msg, visible: visible, width: 360, height: 90
-			}));
+			//console.log('-- add infobox after pin clicked');
+			var obj = e.target;
+			var infobox = new Microsoft.Maps.Infobox(obj.getLocation(), {
+				title: 'No. | Signal/Noise/SNR | Rx | Tx | Timestamp | Speed', 
+				description: obj.msg,
+				visible: true, 
+				width: 480, height: 90
+			});
+			//console.log('-- show infobox');
+			_bingMap.entities.push(infobox);
 		},
 		pushpin: function(center, icon) {
 			return (new Microsoft.Maps.Pushpin(center, { 

@@ -13,9 +13,16 @@ $_result = array();
 
 // read user input
 $_get = Filter::secureArray($_GET);
+$_f = 'demo.log';
+$_t = 1;
+
+
+if (key_exists('f', $_get)) $_f = $_get['f'];
+if (key_exists('t', $_get)) $_t = $_get['t'];
+
 $_env = array(
-		'file' => $_get['f'],
-		'type' => $_get['t'],
+		'file' => $_f,
+		'type' => $_t,
 		'limit' => 1024
 );
 
