@@ -1,6 +1,6 @@
 // 6Harmonics Qige
 // Microsoft Bing Maps API v7
-// 2016.12.21: + jQuery, add jQuery functions, add "#sidebar"
+// 2016.12.23: + jQuery, add jQuery functions, add "#sidebar"
 
 var _appVersion = 'Field (Microsoft Bing Maps) v6.1.211216';
 var _appLat = 40.0492, _appLng = 116.2902;
@@ -147,12 +147,14 @@ $(document).ready(function() {
 		center: $.MicrosoftMap.pos(_appLat,_appLng),
 		zoomLevel: 16, points: null, msg: null
 	};
+  
+  //console.log('add Microsoft.Maps first');
 	// init Microsoft Bing Maps
-	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = true); //console.log('add Microsoft.Maps first');
+	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = true); 
 
 	// fetch data & add points (icon)
 	//console.log('parse file into array: '+_file);
-	$.get('data/_data.php', { f: _file, t: _type }, function(resp) { //console.dir(resp);
+	$.get('data/data.php', { f: _file, t: _type }, function(resp) { //console.dir(resp);
 		if (typeof(resp.dev) != 'undefined' && typeof(resp.data) != 'undefined') {
 			$.app.sync(resp); //console.log('- ajax json data fetched & valid');
 		}
@@ -169,7 +171,9 @@ $(document).ready(function() {
 			$.app.error('File Format Invalid');	
 		}
 		
-		$.MicrosoftMap.sync(_bingMap, _mapConfig.points); // clear & add new icons
-		$.MicrosoftMap.setView(_bingMap, { center: _mapConfig.center, zoom: _mapConfig.zoomLevel }); // move & zoom
+    // clear & add new icons
+		$.MicrosoftMap.sync(_bingMap, _mapConfig.points); 
+    // move & zoom
+		$.MicrosoftMap.setView(_bingMap, { center: _mapConfig.center, zoom: _mapConfig.zoomLevel });
 	},'json');
 });
