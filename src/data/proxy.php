@@ -1,68 +1,31 @@
 <?php
+// use Proxy as alias of FileUpload
 // Save upload files, then redirect to "bing.html?f={$filename}"
-// 6Harmonics Qige @ 2016.12.22
+// 6Harmonics Qige @ 2016.12.23
 define('TASKLET_ID', 'PROXY');
 
 'use strict';
 require_once 'base.filter.php';
-require_once 'base.random.php';
-require_once 'base.fileupload.php';
 require_once 'base.html.php';
+require_once 'app.proxy.php';
 
 
 // saved result
-$_result = array();
+$_get = Filter::secureArray($_GET);
+$_files = Filter::secureArray($_FILES);
 
-// app define
-$_target = '../bing.html?f=';
-$_fileId = 'log-file';
-
-// server define
-$_filepath = './log/';
-$_filename = date('Ymd').'_'.AppRandom::str().'.log';
-$_file = new AppFileUpload(Filter::secureArray($_FILES), $_fileId);
-
-
-// save file, save result to $_result
-// if succeded, then redirect
-// if failed, then show error for 5 seconds, and go back
-// start GOTO
-for(;;) {
-	// verify type
-	if (!$_file) {
-		$_result['err'] = 'bad file object';
-		break;
-	}
-	
-	$r = $_file->validFileType('log');
-	if ($r) {
-		$_result['err'] = 'invalid file type: '.$r;
-		break;
-	}
-	
-	// save .log file
-	$r = $_file->saveToFile($_filename, $_filepath);
-	if ($r) {
-		$_result['err'] = 'filed to save file: '.$r;
-		break;
-	}
-	
-	// end GOTO
-	break;
-}
-
-// clean up
-unset($_file);
-
+// save file
+$app = new AppProxy($_get, $_files);
+$_result = $app->exec();
 
 // prepare OUTPUT
 if (key_exists('err', $_result)) {
-	echo AppHtml::plainText($_result['err'], $_target, 5);
-	//echo AppHtml::plainText($_result['err'], $_target, -1);
+	echo AppHtml::plainText($_result['err'], $_result['target'], 5);
+	//echo AppHtml::plainText($_result['err'], $_result['target'], -1); // debug use only
 } else {
 	// redirect
-	echo AppHtml::redirectTo($_target.$_filename, 0);
-	//echo AppHtml::redirectTo($_target, -1);
+	echo AppHtml::redirectTo($_result['target'], 0);
+	//echo AppHtml::redirectTo($_result['target'], -1); // debug use only
 }
 
 ?>

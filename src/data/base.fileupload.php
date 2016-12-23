@@ -27,6 +27,12 @@ final class AppFileUpload implements IFileUpload
 			$this->_files = $files;
 		}
 	}
+	
+	public function init($files, $fileId = 'log-file')
+	{
+		$this->_files = $files;
+		$this->_fileId = $fileId;
+	}
 
 	public function saveToFile($filename = '', $path = '')
 	{
@@ -59,11 +65,11 @@ final class AppFileUpload implements IFileUpload
 	{
 		$id = $this->_fileId;
 		$files = $this->_files;
-		$errno = $files[$id]['error'];
+		$errno = 0;
 		$error = '';
 		
 		// start GOTO, instead of try()/catch()
-		for(;;) {
+		do {
 			// check environment
 			if (! $id || ! $files || ! key_exists($id, $files)) {
 				$error = 'file object err'; 
@@ -71,6 +77,7 @@ final class AppFileUpload implements IFileUpload
 			}
 			
 			// check error
+			$errno = $files[$id]['error'];
 			if ($errno) {
 				switch($errno) {
 					case UPLOAD_ERR_INI_SIZE:
@@ -97,7 +104,7 @@ final class AppFileUpload implements IFileUpload
 						break;
 				}
 			}
-			if ($error) break;
+			if ($errno) break;
 			
 			// safety check: verify size
 			if ($files[$id]['size'] > $this->_limitSizeMax) {
@@ -112,10 +119,7 @@ final class AppFileUpload implements IFileUpload
 				$error = 'script: bad file type';
 				break;
 			}
-			
-			// end GOTO
-			break;
-		}
+		} while(0); // end GOTO
 			
 		//var_dump($files);
 		return $error;
