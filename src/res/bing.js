@@ -7,6 +7,7 @@ var _appLat = 40.0492, _appLng = 116.2902;
 var _page = 'bing.html', _file = '', _type = 1;
 var _bingMap = null, _mapConfig = null;
 
+// window.location.href
 (function($) {
 	$.url = {
 		get: function(key) {
@@ -20,6 +21,7 @@ var _bingMap = null, _mapConfig = null;
 	};
 }) (jQuery);
 
+// Forms
 (function($) {
 	$.app = {
 		init: function() {
@@ -71,7 +73,7 @@ var _bingMap = null, _mapConfig = null;
 	};
 }) (jQuery);
 
-
+// Bing Maps
 (function($) {
 	$.MicrosoftMap = {
 		map: null,
