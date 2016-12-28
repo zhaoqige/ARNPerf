@@ -71,7 +71,7 @@ var _bingMap = null, _mapConfig = null;
 	};
 }) (jQuery);
 
-// TODO: add Pushpin at every point (with icon), add Infobox when clicked.
+
 (function($) {
 	$.MicrosoftMap = {
 		map: null,
@@ -85,14 +85,12 @@ var _bingMap = null, _mapConfig = null;
 				enableSearchLogo: false, mapTypeId: Microsoft.Maps.MapTypeId.aerial
 			});
 		},
-		sync: function(bMap, data) {
+		sync: function(data) {
 			//console.log('$.MicrosoftMap.sync()');
 			//console.dir(data);
-			if ($.isArray(data)) {
-				//console.log('$.MicrosoftMap.icons(): update');
-				this.map = bMap;
-				bMap.entities.clear();
-				
+      //console.log('$.MicrosoftMap.icons(): update');
+      _bingMap.entities.clear();
+			if ($.isArray(data)) {				
 				var idx = 0;
 				for(idx in data) {
 					var obj = data[idx];
@@ -109,20 +107,21 @@ var _bingMap = null, _mapConfig = null;
 					pin.msg = msg;
 
 					Microsoft.Maps.Events.addHandler(pin, 'click', this.showInfobox);
-					bMap.entities.push(pin);
+					_bingMap.entities.push(pin);
 				}
 			} else {
 				//console.log('$.MicrosoftMap.icons(): default');
-				var devInfobox = this.infobox(bMap.getCenter(), 'Designed by 6WiLink Qige', 
+				var devInfobox = this.infobox(_bingMap.getCenter(), 'Designed by 6WiLink Qige', 
 						'Address: Suit 3B-1102/1105, Z-Park, Haidian Dist., Beijing, China', true);
 				devInfobox.setOptions({ showCloseButton: false });
-				this.map.entities.push(devInfobox);
+				_bingMap.entities.push(devInfobox);
 			}
 		},
 		showInfobox: function(e) {
 			//console.log('-- add infobox after pin clicked');
 			var obj = e.target;
-			var infobox = new Microsoft.Maps.Infobox(obj.getLocation(), {
+      var pos = obj.getLocation();
+			var infobox = new Microsoft.Maps.Infobox(pos, {
 				title: 'No. | Signal/Noise/SNR | Rx | Tx | Timestamp | Speed', 
 				description: obj.msg,
 				visible: true, 
@@ -130,14 +129,23 @@ var _bingMap = null, _mapConfig = null;
 			});
 			//console.log('-- show infobox');
 			_bingMap.entities.push(infobox);
+      _bingMap.setView({ center: pos });
 		},
+    infobox: function(center, title, msg, visible) {
+      return (new Microsoft.Maps.Infobox(center, {
+        title: title,
+        description: msg,
+        visible: visible,
+        width: 480, height: 90
+      }));
+    },
 		pushpin: function(center, icon) {
 			return (new Microsoft.Maps.Pushpin(center, { 
 				icon: icon, width: 19, height: 25
 			}));
 		},
-		setView: function(bMap, view) {
-			bMap.setView(view);
+		setView: function(view) {
+			_bingMap.setView(view);
 		},
 		pos: function(lat,lng) {
 			return (new Microsoft.Maps.Location(lat, lng));
@@ -186,8 +194,8 @@ $(document).ready(function() {
 		}
 		
     // clear & add new icons
-		$.MicrosoftMap.sync(_bingMap, _mapConfig.points); 
+		$.MicrosoftMap.sync(_mapConfig.points); 
     // move & zoom
-		$.MicrosoftMap.setView(_bingMap, { center: _mapConfig.center, zoom: _mapConfig.zoomLevel });
+		$.MicrosoftMap.setView({ center: _mapConfig.center, zoom: _mapConfig.zoomLevel });
 	},'json');
 });
