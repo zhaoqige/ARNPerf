@@ -20,4 +20,5 @@ DEPENDENCIES
  + ActivePerl: Windows Perl Package;
  + Win32::SerialPort: Open/read Serial Port;
  + Net::SSH2: Perl SSH Module;
- + Time::HiRes: Timestamp Module.
+ + Time::HiRes: Timestamp Module;
+ + iwinfo: calling "iwinfo wlan0 i" for baseband data.
