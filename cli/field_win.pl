@@ -228,7 +228,7 @@ sub print_kpi {
 	
 	printf "          WlsMAC: %s\n\n", $_mac ? $_mac : '00:00:00:00:00:00';	
 	printf "           BSSID: %s\n", $_bssid ? $_bssid : '00:00:00:00:00:00';
-	printf "       Sig/Noise: %d/%d (unit: dBm), SNR = %d\n", $_signal, $_noise, $_snr;	
+	printf "    Signal/Noise: %d/%d dBm, SNR = %d\n", $_signal, $_noise, $_snr;	
 	printf "         Bitrate: %.3f Mbit/s\n", $_br;
 	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n", $_rxb, $_txb;	
 
@@ -243,7 +243,7 @@ sub log_calc {
 	my $_data = "+6w:$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rxb},$$_kpi{txb},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
 
 	# write config, and new line		
-	printf "\n      >>> WRITE log now (reason %d) <<<\n", $_flag;
+	printf " >> Dava saved (reason %d)\n", $_flag;
 	&file_write($_log, $_data);
 }
 
@@ -265,6 +265,8 @@ sub gps_calc {
 		$_result = 3;
 		#printf "dbg> write when los GPS SIGNAL\n";
 	}
+  
+  printf "\n > (GPS Fence Calculated @ %s)\n", &ts();
 	
 	# copy values
 	$$_gps_last{valid} = $$_gps_crt{valid};
