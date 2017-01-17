@@ -94,8 +94,6 @@ my ($_bssid, $_signal, $_noise, $_br, $_mac, $_rxb, $_txb);
 my %kpi_last = ( mac => '', bssid => '', signal => 0, noise => 0, br => 0, rxb => 0, txb => 0);
 
 for(;;) {
-	# clear screen
-	system "cls";
 	undef @output;
 	
 	# update kpi from device ssh
@@ -103,6 +101,7 @@ for(;;) {
 
 	# print current kpi
 	&print_kpi(\%kpi, \%kpi_last);
+
 
 
 	# read GPS pos
@@ -200,7 +199,13 @@ sub kpi_update {
 # save
 sub print_kpi {
 	my ($_kpi, $_kpi_last) = @_;
+
 	
+	# clear screen
+	system "cls";
+	print "\n";
+
+
 	print " -------- -------- -------- -------- -------- --------\n";
 	print "                     Field6CLI \n";	
 	print "        https://github.com/zhaoqige/field6.git \n";	
@@ -442,7 +447,7 @@ sub ssh_try {
 
 	$_ssh->auth(username => $_user, password => $_passwd);
 	if ($_ssh->auth_ok()) {
-		print " (Remote reachable, connected)\n";
+		print " (host reachable, connected)\n";
 	} else {
 		die "ERROR: Could not establish SSH connection (invalid user or password)\n";
 	}
