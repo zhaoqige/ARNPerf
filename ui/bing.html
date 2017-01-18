@@ -5,58 +5,59 @@
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <script type="text/javascript" src="res/jquery.min.js"></script>
 <script type="text/javascript" src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+<link rel="stylesheet" href="res/base.css" />
 <link rel="stylesheet" href="res/app.css" />
-<title>Field (Microsoft Bing Maps) v6.1.211216</title>
+<title>Field (Microsoft Bing Maps) v6.1.180117</title>
 </head>
 <body>
-<div class="_sidebar-toggle"> <a class="_btn _btn-menu" id="btn-sidebar-sw"></a> </div>
-<div class="_sidebar" id="sidebar">
-  <div class="_sidebar-block _legend">
-    <div class="_legend-img"> <img id="legend" src="res/legend-1.png" alt="Legend for Colorful Icons" /> </div>
-    <div class="_legend-links"> <a href="#" id="thrpt" class="_btn _btn-link">Thrpt</a> <a href="#" id="snr" class="_btn _btn-link">SNR</a> <a href="#" id="noise" class="_btn _btn-link">Noise</a> <a href="#" id="per" class="_btn _btn-link">PER</a> </div>
+<div class="sidebar-toggle"> <a class="btn btn-menu" id="btn-sidebar-sw"></a> </div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-block legend">
+    <div class="legend-img"> <img id="legend" src="res/legend-1.png" alt="Legend for Colorful Icons" /> </div>
+    <div class="legend-links"> <a href="#" id="thrpt" class="btn btn-link">Thrpt</a> <a href="#" id="snr" class="btn btn-link">SNR</a> <a href="#" id="noise" class="btn btn-link">Noise</a> <a href="#" id="per" class="btn btn-link">PER</a> </div>
   </div>
   <div class="sidebar-block _info">
-    <div class="_form">
-      <div class="_form-row">
-        <label class="_w100" for="dev">Device</label>
-        <input class="_input _w100" type="text" id="dev" value="-" readonly />
+    <div class="form">
+      <div class="form-row">
+        <label class="w100" for="dev">Device</label>
+        <input class="input w100" type="text" id="dev" value="-" readonly />
       </div>
-      <div class="_form-row">
-        <label class="_w100" for="bssid">Peer</label>
-        <input class="_input _w100" type="text" id="bssid" value="-" readonly />
+      <div class="form-row">
+        <label class="w100" for="bssid">Peer</label>
+        <input class="input w100" type="text" id="bssid" value="-" readonly />
       </div>
-      <div class="_form-row">
+      <div class="form-row">
         <label>Points of <em>Total/Strong/Normal/Weak/Offline</em></label>
-        <div class="_btn-group">
-          <input class="_input" type="text" id="ptotal" value="-" />
-          <input class="_input _primary" type="text" id="pstrong" value="-" />
-          <input class="_input _warning" type="text" id="pnormal" value="-" />
-          <input class="_input _error" type="text" id="pweak" value="-" />
-          <input class="_input _bad" type="text" id="pbad" value="-" />
+        <div class="btn-group">
+          <input class="input" type="text" id="ptotal" value="-" />
+          <input class="input primary" type="text" id="pstrong" value="-" />
+          <input class="input warning" type="text" id="pnormal" value="-" />
+          <input class="input error" type="text" id="pweak" value="-" />
+          <input class="input bad" type="text" id="pbad" value="-" />
         </div>
       </div>
-      <div class="_form-row">
-        <label class="_w100" for="file">Log File</label>
-        <input class="_input _w100" type="text" id="file" value="demo.log" />
-        <div class="_ops">
-          <button class="_input _primary" id="home">Home</button>
-          <button class="_input" id="reload">Load</button>
-          <a class="_input _primary" href="res/fiel6.cli.zip" target="_blank">Download CLI</a>
+      <div class="form-row">
+        <label class="w100" for="file">Log File</label>
+        <input class="input w100" type="text" id="file" value="demo.log" />
+        <div class="ops">
+          <button class="btn primary" id="home">Home</button>
+          <button class="btn" id="reload">Load</button>
+          <a class="btn right" href="res/fiel6.cli.zip" target="_blank">Download CLI</a>
         </div>
       </div>
     </div>
   </div>
     <div class="sidebar-block">
-      <div class="_form-row">
+      <div class="form-row">
         <form id="new-file-form" enctype="multipart/form-data" method="post" action="data/proxy.php">
-          <input class="_input _w100" type="file" id="log-file" name="log-file" />
-            <button class="_w100 _btn" id="log-file-go">Go !</button>
+          <input class="input w100" type="file" id="log-file" name="log-file" />
+            <button class="w100 btn primary" id="log-file-go">Go !</button>
         </form>
       </div>
     </div>
 </div>
 <div id='map'></div>
 <script type="text/javascript" src="res/field6.bing.js"></script>
-<!-- Written by 6Harmonics/6WiLink Qige @ 2016.12.23 -->
+<!-- Written by 6Harmonics/6WiLink Qige @ 2016.12.23/2017.01.18 -->
 </body>
 </html>
