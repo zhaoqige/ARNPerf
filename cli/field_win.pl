@@ -148,11 +148,8 @@ sub print_version {
 	my ($v, $_host, $_log) = @_;
 	print "Version: $v, by 6Harmonics Qige @ 2017.01.17\n";
 	
-	die "\n =-= NO HOST IP ASSIGNED =-=\n > perl field_win.pl 192.168.1.24 01d24s44.log\n"
-		unless($_host);
-		
-	die "\n=-= NO LOG FILE NAME ASSIGNED =-=\n > perl field_win.pl 192.168.1.24 01d24s44.log\n"
-		unless($_log);
+	die "\n =-= No HOST IP or LOG assigned =-=\n > perl field_win.pl 192.168.1.24 01d24s44.log\n"
+		unless($_host and $_log);
 }
 
 # send cmd to device, read result
@@ -439,7 +436,8 @@ sub gps_pos {
 sub ts {
 	my ($sec,$min,$hour,$day,$mon,$year,$wday,$yday,$isdst) = localtime(time());
 	$year += 1900; $mon += 1;
-	my $datetime = "$year-$mon-$day $hour:$min:$sec";
+	my $datetime = sprintf "%4d-%02d-%02d %02d:%02d:%02d",
+						$year, $mon, $day, $hour, $min, $sec;
 	return $datetime;
 }
 
@@ -454,9 +452,9 @@ sub file_read_all {
 	my @_content;
 	my ($_file) = @_;
 	if ($_file and file_exists($_file)) {
-		open(FD, "<", $_file);
-		my @_lines = <FD>;
-		close FD;
+		open(OBJ, "<", $_file);
+		my @_lines = <OBJ>;
+		close OBJ;
 
 		@_content = @_lines;
 	}
@@ -478,9 +476,9 @@ sub file_read_1st_line {
 
 sub file_write {
 	my ($_file, $_text) = @_;
-	open FILE, ">>$_file";
-	printf FILE $_text;
-	close FILE;
+	open OBJ, ">$_file";
+	printf OBJ $_text;
+	close OBJ;
 }
 
 
