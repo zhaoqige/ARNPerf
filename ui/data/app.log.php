@@ -10,8 +10,8 @@ require_once 'data.csv.php';
  *
  * @desc		parse .log file into array()
  * @author 		QZ
- * @version 	1.1.231216a
- * @verified 	2016.12.23
+ * @version 	1.1.231216a/1.1.180117
+ * @verified 	2016.12.23/2017.01.18
  */
 class AppLog implements IApp
 {
@@ -83,7 +83,7 @@ class AppLog implements IApp
 					
 				} else if (strstr($buffer, '+6w')) {
 					$line = CSV::decode($buffer);
-					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rxthrpt, $rxmcs, $txthrpt, $txmcs, $speed) = $line;
+					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $tx_thrpt, $br, $speed, $heading) = $line;
 					
 					// prepare for map center, zoom level
 					if ($i) {
@@ -104,11 +104,11 @@ class AppLog implements IApp
               'bssid' => $bssid,
 							'signal' => $signal,
 							'noise' => $noise,
-							'rx' => (float) number_format($rxthrpt, 3),
-							'rxmcs' => $rxmcs,
-							'tx' => (float) number_format($txthrpt, 3),
-							'txmcs' => $txmcs,
-							'speed' => $speed
+							'rx' => number_format((float) $rx_thrpt, 3),
+							'tx' => number_format((float) $tx_thrpt, 3),
+							'br' => $br,
+							'speed' => $speed,
+							'hdg' => $heading
 					);
 					
 					$this->calcPointStat($point);
