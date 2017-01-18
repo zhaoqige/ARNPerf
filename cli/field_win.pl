@@ -1,6 +1,6 @@
 #!/bin/bin/env perl
 #
-# by Qige @ 2017.01.16/2017.01.17
+# by Qige @ 2017.01.16/2017.01.17/2017.01.18
 #
 # define params;
 # read user input;
@@ -16,7 +16,7 @@
 # free up.
 #
 
-use warnings;
+#use warnings; 
 use strict;
 
 use Net::SSH2;
@@ -25,7 +25,7 @@ use Time::HiRes qw(gettimeofday);
 
 # Configurations
 my %app_conf = (
-	app_v => 'vWin20170116 Field6CLI',
+	app_v => 'vWin180117 Field6CLI',
 	app_conf => 'field6.conf',
 
 	gps_file => 'gps.txt',
@@ -57,6 +57,9 @@ my %app_conf = (
 #&conf_init(\%app_conf, @_args);
 # DEBUG USE ONLY
 
+
+
+# ...
 &print_version($app_conf{app_v}, $app_conf{ssh_host}, $app_conf{kpi_log});
 
 
@@ -76,32 +79,30 @@ $ssh = &ssh_try($app_conf{ssh_host}, $app_conf{ssh_port}, $app_conf{ssh_user}, $
 # * client -> send command
 # * server -> send result
 
-my @output;
+# iwinfo, ifconfig
+my $_cmd = "wiw=`iwinfo $app_conf{kpi_wls_if} i | tr -s '\n' '|'`; echo \$wiw | cut -d '|' -f 2 | cut -d ' ' -f 4; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 3; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 5; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 6; echo \$wiw | cut -d '|' -f 6 | cut -d ':' -f 2 | cut -d ' ' -f 2; wnw=`ifconfig $app_conf{kpi_nw_if} | tr -s '\n' '|'`; echo \$wnw | cut -d '|' -f 1 | cut -d ' ' -f 5; echo \$wnw | cut -d '|' -f 6 | cut -d ' ' -f 3 | cut -d ':' -f 2; echo \$wnw | cut -d '|' -f 6 | cut -d ' ' -f 7 | cut -d ':' -f 2\n";
 
+# result from SSH, split in lines
+my @output;
 
 # read welcome banner
 @output = &ssh_read($ssh);
 #print "dbg> \n@output\n";
 
-# iwinfo, ifconfig
-my $_cmd = "wiw=`iwinfo $app_conf{kpi_wls_if} i | tr -s '\n' '|'`; echo \$wiw | cut -d '|' -f 2 | cut -d ' ' -f 4; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 3; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 5; echo \$wiw | cut -d '|' -f 5 | cut -d ' ' -f 6; echo \$wiw | cut -d '|' -f 6 | cut -d ':' -f 2 | cut -d ' ' -f 2; wnw=`ifconfig $app_conf{kpi_nw_if} | tr -s '\n' '|'`; echo \$wnw | cut -d '|' -f 1 | cut -d ' ' -f 5; echo \$wnw | cut -d '|' -f 6 | cut -d ' ' -f 3 | cut -d ':' -f 2; echo \$wnw | cut -d '|' -f 6 | cut -d ' ' -f 7 | cut -d ':' -f 2\n";
 
 # main loop
-my ($_gps_valid, $_gps_lat, $_gps_lng, $_gps_speed, $_gps_heading);
+my %kpi_last = ( rxb => 0, txb => 0, ts_s => 0, ts_us => 0);
 my %gps_last = ( valid => 'V', lat => 0, lng => 0, speed => 0, heading => 0 ); # save last gps pos
-
-my ($_bssid, $_signal, $_noise, $_br, $_mac, $_rxb, $_txb);
-my %kpi_last = ( mac => '', bssid => '', signal => 0, noise => 0, br => 0, rxb => 0, txb => 0);
-
-for(;;) {
+{
+	# empty data
 	undef @output;
+	
 	
 	# update kpi from device ssh
 	my %kpi = &kpi_update($ssh, $_cmd, 1);
 
 	# print current kpi
 	&print_kpi(\%kpi, \%kpi_last);
-
 
 
 	# read GPS pos
@@ -116,6 +117,9 @@ for(;;) {
 	# 1> pass GPS FENCE
 	# 0> inside GPS FENCE
 	my $_flag_gps = &gps_calc(\%app_conf, \%gps_crt, \%gps_last);
+	
+	
+	# save log according to GPS calc
 	if ($_flag_gps) {
 		&log_calc($app_conf{kpi_log}, $_flag_gps, \%kpi, \%gps_crt);
 	}
@@ -124,12 +128,13 @@ for(;;) {
 	# prepare for next round
 	undef %kpi;
 	undef %gps_crt;
+	
+	# idle
 	sleep 1;
 }
 
-#$ssh->close();
-undef $ssh;
-
+&ssh_close(\$ssh);
+# END OF EXECUTION
 
 
 
@@ -146,11 +151,14 @@ sub print_version {
 		unless($_log);
 }
 
-
+# send cmd to device, read result
+# parse result
+# save current ts (%s.%us)
 sub kpi_update {
 	my %kpi;
 	my @output;
 	my ($_bssid, $_signal, $_noise, $_noise2, $_br, $_mac, $_rxb, $_txb);
+	my ($start_s, $start_us) = 0;
 	
 	my ($_ssh, $_cmd, $_idle) = @_;
 	
@@ -173,7 +181,8 @@ sub kpi_update {
 					noise => $_noise || 0,
 					br => $_br || 0,
 					rxb => $_rxb || 0,
-					txb => $_txb || 0
+					txb => $_txb || 0,
+					time_gap => 1
 				);
 			} else {
 				%kpi = (
@@ -183,37 +192,37 @@ sub kpi_update {
 					noise => $_noise2 || 0,
 					br => $_br || 0,
 					rxb => $_rxb || 0,
-					txb => $_txb || 0
+					txb => $_txb || 0,
+					time_gap => 1
 				);
 			}
 		}
 	}
 	
-	return %kpi;	
+	# save current ts: %s.%us
+	($start_s, $start_us) = gettimeofday();
+	$kpi{ts_s} = $start_s;
+	$kpi{ts_us} = $start_us;
+	
+
+	return %kpi;
 }
 
 
-# todo: finish calc kpi, save kpi
-# calc kpi
+
+# calc kpi (time interval)
 # print kpi
 # save
 sub print_kpi {
 	my ($_kpi, $_kpi_last) = @_;
 
+	my ($_mac, $_bssid, $_peer) = '';
+	my ($_signal, $_noise, $_snr, $_rxb, $_rxb_last, $_txb, $_txb_last, $_br) = 0;
 	
-	# clear screen
-	system "cls";
-	print "\n";
-
-
-	print " -------- -------- -------- -------- -------- --------\n";
-	print "                     Field6CLI \n";	
-	print "        https://github.com/zhaoqige/field6.git \n";	
-	print " -------- -------- -------- -------- -------- --------\n";
+	my %thrpt = ( rx_thrpt => 0, tx_thrpt => 0, rxb => 0, txb => 0, _rxb => 0, _txb => 0 );
 	
-	my ($_mac, $_bssid, $_peer);
-	my ($_signal, $_noise, $_snr, $_rxb, $_txb, $_br);
 	
+	# check data first
 	$_mac = $$_kpi{mac}; $_bssid = $$_kpi{bssid};
 	$_peer = $$_kpi{peer} || '';
 	$_signal = $$_kpi{signal};
@@ -225,25 +234,92 @@ sub print_kpi {
 	}
 	$_br = $$_kpi{br}; $_rxb = $$_kpi{rxb}; $_txb = $$_kpi{txb};
 	
+	$_rxb_last = $$_kpi_last{rxb}; $_txb_last = $$_kpi_last{txb};
 	
-	printf "          WlsMAC: %s\n\n", $_mac ? $_mac : '00:00:00:00:00:00';	
+	$thrpt{rxb} = $_rxb;
+	$thrpt{txb} = $_txb;
+	$thrpt{_rxb} = $_rxb_last;
+	$thrpt{_txb} = $_txb_last;
+	
+	$thrpt{start_s} = $$_kpi{ts_s};
+	$thrpt{start_us} = $$_kpi{ts_us};
+	$thrpt{stop_s} = $$_kpi_last{ts_s};
+	$thrpt{stop_us} = $$_kpi_last{ts_us};
+	
+	# send to calc
+	&kpi_thrpt_calc(\%thrpt);
+	
+	
+	# clear screen
+	system "cls";
+	print "\n";
+
+
+	print " -------- -------- -------- -------- -------- --------\n";
+	print "                     Field6CLI \n";	
+	print "        https://github.com/zhaoqige/field6.git \n";	
+	print " -------- -------- -------- -------- -------- --------\n";
+	
+	printf "             MAC: %s\n\n", $_mac ? $_mac : '00:00:00:00:00:00';	
 	printf "           BSSID: %s\n", $_bssid ? $_bssid : '00:00:00:00:00:00';
 	printf "    Signal/Noise: %d/%d dBm, SNR = %d\n", $_signal, $_noise, $_snr;	
 	printf "         Bitrate: %.3f Mbit/s\n", $_br;
-	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n", $_rxb, $_txb;	
+	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n", $thrpt{rx_thrpt}, $thrpt{tx_thrpt};	
 
 	print "\n";
+	
+	
+	# save for next time
+	$$_kpi{rx_thrpt} = $thrpt{rx_thrpt};
+	$$_kpi{tx_thrpt} = $thrpt{tx_thrpt};
+	$$_kpi_last{rxb} = $$_kpi{rxb};
+	$$_kpi_last{txb} = $$_kpi{txb};
+	
+	$$_kpi_last{ts_s} = $$_kpi{ts_s};
+	$$_kpi_last{ts_us} = $$_kpi{ts_us};
 }
+
+
+# calc time interval, throughput
+sub kpi_thrpt_calc {
+	my ($_thrpt) = @_;
+	
+	my ($_start_s, $_start_us, $_stop_s, $_stop_us, $_time_gap) = 0;
+	my ($_rx_thrpt, $_tx_thrpt, $_rxb, $_txb, $_rxb_last, $_txb_last);
+	$_rxb = $$_thrpt{rxb}; $_txb = $$_thrpt{txb};
+	$_rxb_last = $$_thrpt{_rxb}; $_txb_last = $$_thrpt{_txb};
+	$_start_s = $$_thrpt{start_s};
+	$_start_us = $$_thrpt{start_us};
+	$_stop_s = $$_thrpt{stop_s};
+	$_stop_us = $$_thrpt{stop_us};
+
+	if ($_rxb_last > 0 and $_txb_last > 0) {
+		$_rx_thrpt = ($_rxb - $_rxb_last) * 8 / 1024 / 1024; # unit: Mbps
+		$_tx_thrpt = ($_txb - $_txb_last) * 8 / 1024 / 1024;
+		
+		$_time_gap = ($_start_s + $_start_us/1000000) - ($_stop_s + $_stop_us/1000000);
+		if ($_time_gap > 0) {
+			$_rx_thrpt = $_rx_thrpt / $_time_gap;
+			$_tx_thrpt = $_tx_thrpt / $_time_gap;
+		}
+	} else {
+		$_rx_thrpt = $_tx_thrpt = 0;
+	}
+	
+	$$_thrpt{rx_thrpt} = $_rx_thrpt;
+	$$_thrpt{tx_thrpt} = $_tx_thrpt;
+}
+
 
 # todo: decide when to write
 # $_flag: 3> lost GPS, 2> recover GPS, 1> over FENCE, 0> secure 
 sub log_calc {
 	my ($_log, $_flag, $_kpi, $_gps) = @_;
 	
-	my $_data = "+6w:$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rxb},$$_kpi{txb},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
+	my $_data = "+6w:$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
 
 	# write config, and new line		
-	printf " >> Dava saved (reason %d)\n", $_flag;
+	printf " >> Data saved (reason %d)\n", $_flag;
 	&file_write($_log, $_data);
 }
 
@@ -266,7 +342,7 @@ sub gps_calc {
 		#printf "dbg> write when los GPS SIGNAL\n";
 	}
   
-  printf "\n > (GPS Fence Calculated @ %s)\n", &ts();
+	printf "\n > (GPS Fence Calculated @ %s)\n", &ts();
 	
 	# copy values
 	$$_gps_last{valid} = $$_gps_crt{valid};
@@ -278,6 +354,9 @@ sub gps_calc {
 	return $_result;
 }
 
+# limit this gps inside a square of last one
+# mark last gps as center, if lat gap + lng gap over bar
+# trigger pass fence
 sub gps_calc_fence {
 	my $_result = 0;
 	
@@ -305,9 +384,8 @@ sub gps_print {
 }
 
 
-
-# set default value when "undef"/NULL
 # return ($valid, $lat, $lng, $speed, $hdg)
+# set default value when "undef"/NULL
 sub gps_pos {
 	my %pos;
 	my @_result;
@@ -476,6 +554,7 @@ sub ssh_write {
 # close & free up
 sub ssh_close {
 	my ($_ssh) = @_;
-	#$_ssh->close();
+	$$_ssh->close(); # verified @ 2017.01.18
+	undef $$_ssh;
 }
 
