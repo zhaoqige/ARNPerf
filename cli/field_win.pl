@@ -269,7 +269,7 @@ sub print_kpi {
 	printf "         Bitrate: %.3f Mbit/s\n", $_br;
 	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n\n", $thrpt{rx_thrpt}, $thrpt{tx_thrpt};
 		
-	printf "        interval: %.3fs\n\n", $thrpt{intl};
+	printf " > %.3fs passed\n", $thrpt{intl};
 	
 	# save for next time
 	$$_kpi{rx_thrpt} = $thrpt{rx_thrpt};
@@ -372,7 +372,7 @@ sub gps_calc {
 		#printf "dbg> write when los GPS SIGNAL\n";
 	}
   
-	printf "\n > (GPS Fence Calculated @ %s)\n", &ts();
+	printf " > GPS Fence Calculated @ %s\n", &ts();
 	
 	# copy values
 	$$_gps_last{valid} = $$_gps_crt{valid};
@@ -407,9 +407,9 @@ sub gps_calc_fence {
 sub gps_print {
 	my (%gps_crt) = @_;
 	if ($gps_crt{valid} =~ /A/) {
-		printf " GCJ-02: %.8f, %.8f, %.3f km/h, hdg %d\n", $gps_crt{lat}, $gps_crt{lng}, $gps_crt{speed}, $gps_crt{heading};
+		printf " > GCJ-02: %.8f, %.8f, %.3f km/h, hdg %d\n", $gps_crt{lat}, $gps_crt{lng}, $gps_crt{speed}, $gps_crt{heading};
 	} else {
-		printf " GCJ-02: =-= UNKNOWN POSITION (%s) =-=\n", $gps_crt{valid};
+		printf " > GCJ-02: =-= UNKNOWN POSITION (%s) =-=\n", $gps_crt{valid};
 	}
 }
 
