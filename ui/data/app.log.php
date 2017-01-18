@@ -75,16 +75,15 @@ class AppLog implements IApp
 				if (strstr($buffer, 'config')) {
 					$line = CSV::decode($buffer);
 					
-					list($mark, $config, $mac, $peer, $title, $note) = $line;
+					list($mark, $config, $mac, $title, $note) = $line;
 					
 					$dev['mac'] = $mac;
-					$dev['peer'] = $peer;
 					$dev['title'] = $title;
 					$dev['note'] = $note;
 					
 				} else if (strstr($buffer, '+6w')) {
 					$line = CSV::decode($buffer);
-					list($mark, $ts, $lat, $lng, $signal, $noise, $rxthrpt, $rxmcs, $txthrpt, $txmcs, $speed) = $line;
+					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rxthrpt, $rxmcs, $txthrpt, $txmcs, $speed) = $line;
 					
 					// prepare for map center, zoom level
 					if ($i) {
@@ -102,6 +101,7 @@ class AppLog implements IApp
 							'ts' => $ts,
 							'lat' => $lat, 
 							'lng' => $lng,
+              'bssid' => $bssid,
 							'signal' => $signal,
 							'noise' => $noise,
 							'rx' => (float) number_format($rxthrpt, 3),

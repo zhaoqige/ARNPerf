@@ -57,7 +57,6 @@ var _bingMap = null, _mapConfig = null;
 						&& typeof(resp.data) != 'undefined') 
 			{
 				$('#dev').val(resp.dev.mac);
-				$('#peer').val(resp.dev.peer);
 				
 				$('#ptotal').val(resp.data.pstat.total);
 				$('#pstrong').val(resp.data.pstat.strong);
@@ -68,7 +67,7 @@ var _bingMap = null, _mapConfig = null;
 		},
 		error: function(msg) {
 			$('#dev').val(msg);
-			$('#peer').val(msg);
+			$('#bssid').val(msg);
 		}
 	};
 }) (jQuery);
@@ -107,6 +106,7 @@ var _bingMap = null, _mapConfig = null;
 
 					pin.idx = idx;
 					pin.msg = msg;
+          pin.bssid = obj.bssid;
 
 					Microsoft.Maps.Events.addHandler(pin, 'click', this.showInfobox);
 					_bingMap.entities.push(pin);
@@ -129,6 +129,7 @@ var _bingMap = null, _mapConfig = null;
 				visible: true, 
 				width: 480, height: 90
 			});
+      $('#bssid').val(obj.bssid);
 			//console.log('-- show infobox');
 			_bingMap.entities.push(infobox);
       _bingMap.setView({ center: pos });
