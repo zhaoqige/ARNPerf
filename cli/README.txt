@@ -1,3 +1,5 @@
+CHANGE LOG
+----------
 v160117:
 1. Change .log format;
 2. Add .log file upload.
@@ -6,6 +8,16 @@ v220715:
 1. Added interval time calculation.
 
 
+QUICK GUIDE
+-----------
+1. You can use "00_CONFIG.bat" to generate "field6.conf";
+2. Run "01_GPS.bat" right away;
+3a. If "field6.conf" file exists, run "02_LOG-RUN.bat" directly;
+3b. If not, run "02_GPS.bat" instead.
+
+
+HOW TO
+------
 How to use:
 1. Install GPS Windows Driver;
 2. Install ActivePerl;
@@ -18,7 +30,8 @@ How to use:
 	Take this as example:
 	Eg. "http://192.168.1.2/field6/bing.html"
 
-FAQ:
+F.A.Q.
+------
 1. You should run "perl gps_win.pl" like this:
 	"> gps_win.pl COM10"
 
