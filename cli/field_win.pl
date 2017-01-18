@@ -223,7 +223,7 @@ sub print_kpi {
 	my ($_mac, $_bssid, $_peer) = '';
 	my ($_signal, $_noise, $_snr, $_rxb, $_rxb_last, $_txb, $_txb_last, $_br) = 0;
 	
-	my %thrpt = ( rx_thrpt => 0, tx_thrpt => 0, rxb => 0, txb => 0, _rxb => 0, _txb => 0 );
+	my %thrpt = ( rx_thrpt => 0, tx_thrpt => 0, rxb => 0, txb => 0, _rxb => 0, _txb => 0, intl => 0 );
 	
 	
 	# check data first
@@ -258,20 +258,18 @@ sub print_kpi {
 	system "cls";
 	print "\n";
 
-
 	print " -------- -------- -------- -------- -------- --------\n";
 	print "                     Field6CLI \n";	
 	print "        https://github.com/zhaoqige/field6.git \n";	
 	print " -------- -------- -------- -------- -------- --------\n";
-	
 	printf "             MAC: %s\n\n", $_mac ? $_mac : '00:00:00:00:00:00';	
+	
 	printf "           BSSID: %s\n", $_bssid ? $_bssid : '00:00:00:00:00:00';
 	printf "    Signal/Noise: %d/%d dBm, SNR = %d\n", $_signal, $_noise, $_snr;	
 	printf "         Bitrate: %.3f Mbit/s\n", $_br;
-	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n", $thrpt{rx_thrpt}, $thrpt{tx_thrpt};	
-
-	print "\n";
-	
+	printf "      Throughput: Rx = %.3f Mbps, Tx = %.3f Mbps\n\n", $thrpt{rx_thrpt}, $thrpt{tx_thrpt};
+		
+	printf "        interval: %.3fs\n\n", $thrpt{intl};
 	
 	# save for next time
 	$$_kpi{rx_thrpt} = $thrpt{rx_thrpt};
@@ -302,7 +300,8 @@ sub kpi_thrpt_calc {
 		$_tx_thrpt = ($_txb - $_txb_last) * 8 / 1024 / 1024;
 		
 		$_time_gap = ($_start_s + $_start_us/1000000) - ($_stop_s + $_stop_us/1000000);
-		printf " > (interval %.3f s)\n", $_time_gap;
+		#printf " > (interval %.3f s)\n", $_time_gap;
+		$$_thrpt{intl} = $_time_gap;
 		if ($_time_gap > 0) {
 			$_rx_thrpt = $_rx_thrpt / $_time_gap;
 			$_tx_thrpt = $_tx_thrpt / $_time_gap;
