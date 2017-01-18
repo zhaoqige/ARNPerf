@@ -66,7 +66,9 @@ my %app_conf = (
 
 # try ssh connection first
 my $ssh;
-my $ssh_target = "$app_conf{ssh_user}:$app_conf{ssh_passwd}\@$app_conf{ssh_host}:$app_conf{ssh_port}";
+my $ssh_target = sprintf "%s:%s@%s:%s",
+					$app_conf{ssh_user}, $app_conf{ssh_passwd},
+					$app_conf{ssh_host}, $app_conf{ssh_port};
 print "Trying SSH to host $ssh_target, please wait ...\n";
 $ssh = &ssh_try($app_conf{ssh_host}, $app_conf{ssh_port}, $app_conf{ssh_user}, $app_conf{ssh_passwd});
 #print "dbg> $ssh\n";
@@ -93,7 +95,9 @@ my @output;
 # main loop
 my %kpi_last = ( rxb => 0, txb => 0, ts_s => 0, ts_us => 0);
 my %gps_last = ( valid => 'V', lat => 0, lng => 0, speed => 0, heading => 0 ); # save last gps pos
-{
+
+# run loop, and never quit
+for(;;) {
 	# empty data
 	undef @output;
 	
@@ -121,7 +125,7 @@ my %gps_last = ( valid => 'V', lat => 0, lng => 0, speed => 0, heading => 0 ); #
 	
 	# save log according to GPS calc
 	if ($_flag_gps) {
-		&log_calc($app_conf{kpi_log}, $_flag_gps, \%kpi, \%gps_crt);
+		&log_calc($_flag_gps, \%app_conf, \%kpi, \%gps_crt);
 	}
 	
 
@@ -298,6 +302,7 @@ sub kpi_thrpt_calc {
 		$_tx_thrpt = ($_txb - $_txb_last) * 8 / 1024 / 1024;
 		
 		$_time_gap = ($_start_s + $_start_us/1000000) - ($_stop_s + $_stop_us/1000000);
+		printf " > (interval %.3f s)\n", $_time_gap;
 		if ($_time_gap > 0) {
 			$_rx_thrpt = $_rx_thrpt / $_time_gap;
 			$_tx_thrpt = $_tx_thrpt / $_time_gap;
@@ -314,12 +319,38 @@ sub kpi_thrpt_calc {
 # todo: decide when to write
 # $_flag: 3> lost GPS, 2> recover GPS, 1> over FENCE, 0> secure 
 sub log_calc {
-	my ($_log, $_flag, $_kpi, $_gps) = @_;
-	
-	my $_data = "+6w:$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
+	my ($_log, $_note, $_location, $_ts);
+	my ($_data, $_peer);
+	my ($_flag, $_conf, $_kpi, $_gps) = @_;
 
-	# write config, and new line		
 	printf " >> Data saved (reason %d)\n", $_flag;
+	if ($_flag > 0) {
+		$_log = $$_conf{kpi_log};
+		$_note = $$_conf{kpi_note};
+		$_location = $$_conf{kpi_location};
+		$_ts = &ts();
+		if ($_flag == 2) {
+			$_data = "+6w,config,$$_kpi{mac},$_note,$_location\n";
+			&log_save($_log, $_data);
+		}
+		
+		#$_data = "+6w,$$_kpi{bssid},$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
+		$_data = sprintf "+6w,%s,%s,%.8f,%.8f,%d,%d,%.3f,%.3f,%.1f,%.3f,%d\n", 
+					$_ts, $$_kpi{bssid},$$_gps{lat},$$_gps{lng},
+					$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},
+					$$_gps{speed},$$_gps{heading};
+		&log_save($_log, $_data);
+	}
+}
+
+sub log_is_empty {
+	my ($_log) = @_;
+	my $_text = &file_read_1st_line($_log);
+	return (($_text and $_text =~ '') ? 1 : 0);
+}
+
+sub log_save {
+	my ($_log, $_data) = @_;
 	&file_write($_log, $_data);
 }
 
