@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# 6Harmonics Inc
+# by Qige @ 2014.10.20
+
+# old.fix
+#lat_fix=0.0009
+#lng_fix=0.006
+
+# c7fix
+lat_fix=0.0012
+lng_fix=0.0061
+
+gps_file="/tmp/gps.txt"
+
+if [ $# -lt 2 ]; then
+	echo "Usage: gpsxd <dev> <GCJ-02_file>"
+	exit 1
+else
+	echo -e "Analyze GPS raw data:"
+	echo -e "\t$1 -> $2"
+	echo -e "\tGPS -> $gps_file"
+	echo
+fi
+
+# Start read GPS raw data
+while [ 1 ]; do
+	if [ -e $1 ]; then
+		stty ispeed 9600 ospeed 9600 -F $1
+
+		# Parse GPS raw data
+		#cat $1 | grep RMC | gawk 'BEGIN{FS=","; OFS=","} {print $3,$4,$5,$6,$7}'
+		j=1
+		cat $1 | while read line
+		do
+			rmc=`echo -n $line | grep RMC`
+			if [ "$rmc" != '' ]; then
+				raw_str=`echo $rmc | gawk 'BEGIN{FS=","; OFS=" "} {print $3,$4,$5,$6,$7}'`
+				raw=($raw_str)
+
+				gps_valid=${raw[0]}
+				gps_rlat=${raw[1]}
+				gps_ns=${raw[2]}
+				gps_rlng=${raw[3]}
+				gps_ew=${raw[4]}
+				#echo "prased_raw = $gps_valid,$gps_rlat,$gps_ns,$gps_rlng,$gps_ew"; echo; echo
+
+				# Time stamp
+				now=`date "+%F %X"`
+				gps_lat=''
+				gps_lat_gcj02=''
+				gps_lng=''
+				gps_lng_gcj02=''
+
+				if [ "$gps_valid" = "A" ]; then
+
+					# A: valid, V: invalid
+					# 4002.97574: [4002.97574\100].[(4002.97574-40*100)/60] = 40.0495956
+					# 11617.41359: [11617.41359\100].[11617-114*100)/60] = 116.2902265
+					# N: +, S: -, E: +, W: -
+
+					gps_lat_i=`echo "scale=0; $gps_rlat/100" | bc`
+					gps_lat_f=`echo "scale=7; ($gps_rlat-$gps_lat_i*100)/60" | bc`
+					gps_lat_ff=`echo "scale=7; ($gps_rlat-$gps_lat_i*100)/60+$lat_fix" | bc`
+
+					gps_lng_i=`echo "scale=0; $gps_rlng/100" | bc`
+					gps_lng_f=`echo "scale=7; ($gps_rlng-$gps_lng_i*100)/60" | bc`
+					gps_lng_ff=`echo "scale=7; ($gps_rlng-$gps_lng_i*100)/60+$lng_fix" | bc`
+
+					gps_lat="$gps_lat_i$gps_lat_f"
+					gps_lat_gcj02="$gps_lat_i$gps_lat_ff"
+					gps_lng="$gps_lng_i$gps_lng_f"
+					gps_lng_gcj02="$gps_lng_i$gps_lng_ff"
+				else
+					gps_valid="V"
+					gps_lat=''
+					gps_lng=''
+				fi
+
+
+				echo -en "$now $2\t\t"
+				echo "$gps_valid,$gps_lat_gcj02,$gps_lng_gcj02" | tee $2
+				echo -en "$now $gps_file\t\t"
+				echo "$gps_valid,$gps_lat,$gps_lng" | tee $gps_file
+
+				j=$(($j + 1))
+			fi
+		done
+		sleep 1
+	else
+		sleep 1
+		continue
+		#exit 1
+	fi
+
+done
+
+
