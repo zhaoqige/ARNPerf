@@ -42,11 +42,11 @@ my %app_conf = (
 
 
 # init & load
-#&conf_init(\%app_conf, @ARGV);
+&conf_init(\%app_conf, @ARGV);
 
 # DEBUG USE ONLY
-my @_args = ('com6'); # DEBUG USE ONLY
-&conf_init(\%app_conf, @_args);
+#my @_args = ('com6'); # DEBUG USE ONLY
+#&conf_init(\%app_conf, @_args);
 # DEBUG USE ONLY
 
 
