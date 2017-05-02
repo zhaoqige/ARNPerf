@@ -8,6 +8,6 @@ if "%log%" == "" set log="d24fast.log"
 set /p note="Enter Note: (demo) "
 if "%note%" == "" set note="demo"
 set /p location="Enter Location: (BQL) "
-if "%location%" == "" set log="BQL"
+if "%location%" == "" set location="BQL"
 %DIR%\field_win.pl 192.168.1."%host%" "%log%" "%note%" "%location%"
 pause
