@@ -80,8 +80,8 @@ var _bingMap = null, _mapConfig = null;
 			//console.log('$.MicrosoftMap.init()');
 			return new Microsoft.Maps.Map(obj, {
 				center: _mapConfig.center, zoom: _mapConfig.zoomLevel,
-				credentials: dbg ? 'AhnlfvF1xVTU6hqJs2ueQB7f46mv4JkkkdbqYQ3sPUkYu7CjonMpC8WVFVvG7mMX'
-						: 'ApI17LQorAgXC64mQ85EC-ZJlcxUn0pthYc0klwLxi8EzFC0lhnrQEutHj8o3CEL', 
+				credentials: dbg ? 'AsHiUhyyE-3PP8A82WyPhdS6_Z18NL2cuaySXTGPviswZ_WDmgDlaSZ7xpEF77-3'
+						: 'AqzGQqhrf0MBQYembK0KvTyefDdZkzyj6FEFfUNLuuRQRI9qCj0bjGOlixQi_ZAX', 
 				showMapTypeSelector: false, showBreadcrumb: true, enableClickableLogo: false,
 				enableSearchLogo: false, mapTypeId: Microsoft.Maps.MapTypeId.aerial
 			});
@@ -174,7 +174,7 @@ $(document).ready(function() {
   
   //console.log('add Microsoft.Maps first');
 	// init Microsoft Bing Maps
-	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = true); 
+	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = false); 
 
 	// fetch data & add points (icon)
 	//console.log('parse file into array: '+_file);
