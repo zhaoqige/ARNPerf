@@ -395,7 +395,7 @@ sub gps_calc_fence {
 	my ($gap_fence, $lat1, $lng1, $lat2, $lng2) = @_;
 	my $gap_lat = $lat1 > $lat2 ? ($lat1 - $lat2) : ($lat2 - $lat1);		
 	my $gap_lng = $lng1 > $lng2 ? ($lng1 - $lng2) : ($lng2 - $lng1);
-	my $gps_gap = $gap_lat - $gap_lng;
+	my $gps_gap = $gap_lat + $gap_lng;
 	
 	if ($gps_gap > $gap_fence) {
 		#print "dbg> PASS FENCE\n";
