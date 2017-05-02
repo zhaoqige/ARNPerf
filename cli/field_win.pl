@@ -335,7 +335,7 @@ sub log_calc {
 					$_ts, $$_kpi{bssid},$$_gps{lat},$$_gps{lng},
 					$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},
 					$$_gps{speed},$$_gps{heading};
-		&log_save($_log, $_data);
+		&log_append($_log, $_data);
 	}
 }
 
@@ -348,6 +348,11 @@ sub log_is_empty {
 sub log_save {
 	my ($_log, $_data) = @_;
 	&file_write($_log, $_data);
+}
+
+sub log_append {
+	my ($_log, $_data) = @_;
+	&file_append($_log, $_data);
 }
 
 # pass in hash reference
@@ -477,6 +482,13 @@ sub file_read_1st_line {
 sub file_write {
 	my ($_file, $_text) = @_;
 	open OBJ, ">$_file";
+	printf OBJ $_text;
+	close OBJ;
+}
+
+sub file_append {
+	my ($_file, $_text) = @_;
+	open OBJ, ">>$_file";
 	printf OBJ $_text;
 	close OBJ;
 }
