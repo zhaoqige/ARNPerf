@@ -1,5 +1,5 @@
 @echo off
-title "Field v6.0.Q160117 Config"
+title "ARNPerf v6.1.090517 Config"
 set DIR=%cd%
 
 set /p host="Default SSH Host: (192.168.1.24) "
@@ -23,8 +23,8 @@ if "%note%" == "" set note=demo
 set /p loc="Default Test Location: (BQL-BJ-CN) "
 if "%loc%" == "" set loc=BQL-BJ-CN
 
-del field6.conf
+del ARNPerf.conf 2 > nul
 pause
 
-echo %host%,%port%,%user%,%passwd%,%log%,%note%,%loc% > field6.conf
+echo %host%,%port%,%user%,%passwd%,%log%,%note%,%loc% > ARNPerf.conf
 pause

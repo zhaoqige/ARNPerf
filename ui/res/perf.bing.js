@@ -2,7 +2,7 @@
 // Microsoft Bing Maps API v7
 // 2016.12.23: + jQuery, add jQuery functions, add "#sidebar"
 
-var _appVersion = 'Field (Microsoft Bing Maps) v6.1.211216';
+var _appVersion = 'ARNPerf (BingMaps) v6.1.090517';
 var _appLat = 40.0492, _appLng = 116.2902;
 var _page = 'bing.html', _file = '', _type = 1;
 var _bingMap = null, _mapConfig = null;
@@ -52,12 +52,12 @@ var _bingMap = null, _mapConfig = null;
 			});
 		},
 		sync: function(resp) { //console.dir(resp);
-			if (typeof(resp) != 'undefined' && resp 
+			if (typeof(resp) != 'undefined' && resp
 					&& typeof(resp.dev) != 'undefined'
-						&& typeof(resp.data) != 'undefined') 
+						&& typeof(resp.data) != 'undefined')
 			{
 				$('#dev').val(resp.dev.mac);
-				
+
 				$('#ptotal').val(resp.data.pstat.total);
 				$('#pstrong').val(resp.data.pstat.strong);
 				$('#pnormal').val(resp.data.pstat.normal);
@@ -81,7 +81,7 @@ var _bingMap = null, _mapConfig = null;
 			return new Microsoft.Maps.Map(obj, {
 				center: _mapConfig.center, zoom: _mapConfig.zoomLevel,
 				credentials: dbg ? 'AsHiUhyyE-3PP8A82WyPhdS6_Z18NL2cuaySXTGPviswZ_WDmgDlaSZ7xpEF77-3'
-						: 'AqzGQqhrf0MBQYembK0KvTyefDdZkzyj6FEFfUNLuuRQRI9qCj0bjGOlixQi_ZAX', 
+						: 'AqzGQqhrf0MBQYembK0KvTyefDdZkzyj6FEFfUNLuuRQRI9qCj0bjGOlixQi_ZAX',
 				showMapTypeSelector: false, showBreadcrumb: true, enableClickableLogo: false,
 				enableSearchLogo: false, mapTypeId: Microsoft.Maps.MapTypeId.aerial
 			});
@@ -91,7 +91,7 @@ var _bingMap = null, _mapConfig = null;
 			//console.dir(data);
       //console.log('$.MicrosoftMap.icons(): update');
       _bingMap.entities.clear();
-			if ($.isArray(data)) {				
+			if ($.isArray(data)) {
 				var idx = 0;
 				for(idx in data) {
 					var obj = data[idx];
@@ -112,7 +112,7 @@ var _bingMap = null, _mapConfig = null;
 				}
 			} else {
 				//console.log('$.MicrosoftMap.icons(): default');
-				var devInfobox = this.infobox(_bingMap.getCenter(), 'Designed by 6WiLink Qige', 
+				var devInfobox = this.infobox(_bingMap.getCenter(), 'Designed by 6WiLink Qige',
 						'Address: Suit 3B-1102/1105, Z-Park, Haidian Dist., Beijing, China', true);
 				devInfobox.setOptions({ showCloseButton: false });
 				_bingMap.entities.push(devInfobox);
@@ -123,9 +123,9 @@ var _bingMap = null, _mapConfig = null;
 			var obj = e.target;
       var pos = obj.getLocation();
 			var infobox = new Microsoft.Maps.Infobox(pos, {
-				title: 'No. | Signal/Noise/SNR | Rx Tx Br | Timestamp | Speed', 
+				title: 'No. | Signal/Noise/SNR | Rx Tx Br | Timestamp | Speed',
 				description: obj.msg,
-				visible: true, 
+				visible: true,
 				width: 480, height: 90
 			});
       $('#bssid').val(obj.bssid);
@@ -142,7 +142,7 @@ var _bingMap = null, _mapConfig = null;
       }));
     },
 		pushpin: function(center, icon) {
-			return (new Microsoft.Maps.Pushpin(center, { 
+			return (new Microsoft.Maps.Pushpin(center, {
 				icon: icon, width: 19, height: 25
 			}));
 		},
@@ -161,20 +161,20 @@ $(document).ready(function() {
 	console.log(_appVersion);
 	_file = $.url.get('f');
 	_type = $.url.get('t');
-	
+
 	if (! _file) _file = 'demo.log';
 	if (! _type) _type = 1;
 	$.app.init(_file, _type);
-	
+
 	// default settings
 	_mapConfig = {
 		center: $.MicrosoftMap.pos(_appLat,_appLng),
 		zoomLevel: 16, points: null, msg: null
 	};
-  
+
   //console.log('add Microsoft.Maps first');
 	// init Microsoft Bing Maps
-	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = false); 
+	_bingMap = $.MicrosoftMap.init($('#map')[0], _mapConfig.center, debug = false);
 
 	// fetch data & add points (icon)
 	//console.log('parse file into array: '+_file);
@@ -192,11 +192,11 @@ $(document).ready(function() {
 			_mapConfig.msg = resp.data.msg;
 		} else {
 			console.log('invalid data');
-			$.app.error('File Format Invalid');	
+			$.app.error('File Format Invalid');
 		}
-		
+
     // clear & add new icons
-		$.MicrosoftMap.sync(_mapConfig.points); 
+		$.MicrosoftMap.sync(_mapConfig.points);
     // move & zoom
 		$.MicrosoftMap.setView({ center: _mapConfig.center, zoom: _mapConfig.zoomLevel });
 	},'json');

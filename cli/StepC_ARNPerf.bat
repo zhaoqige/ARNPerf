@@ -1,5 +1,5 @@
 @echo off
-title "Field v6.0.160117"
+title "ARNPerf v6.1.090517"
 set DIR=%cd%
 set /p host="Enter host: (default = 192.168.1.24) "
 if "%host%" == "" set host=24
@@ -9,5 +9,5 @@ set /p note="Enter Note: (demo) "
 if "%note%" == "" set note="demo"
 set /p location="Enter Location: (BQL) "
 if "%location%" == "" set location="BQL"
-%DIR%\field_win.pl 192.168.1."%host%" "%log%" "%note%" "%location%"
+%DIR%\perf_win.pl 192.168.1."%host%" "%log%" "%note%" "%location%"
 pause

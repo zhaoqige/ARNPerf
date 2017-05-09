@@ -1,5 +1,5 @@
 @echo off
-title "Field v6.0.Q160117"
+title "ARNPerf v6.1.090517"
 set DIR=%cd%
 set /p num="Enter GPS Module COM Number: 4 "
 if "%num%" == "" set num=4

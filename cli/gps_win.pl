@@ -1,6 +1,8 @@
 #!/bin/bin/env perl
 #
-# by Qige @ 2017.01.16/2017.01.17/2017.01.18
+# by Qige
+# 2017.01.16 - 2017.01.18 rewrite whole functions
+# 2017.05.09 rename project to "ARNPerf"
 #
 # define params;
 # read user input;
@@ -15,7 +17,7 @@
 # free up
 #
 
-#use warnings; 
+#use warnings;
 use strict;
 
 require 5.003;
@@ -24,7 +26,7 @@ use POSIX;
 
 # Configurations
 my %app_conf = (
-	app_v => 'vWin180117 Field6CLI.GPS',
+	app_v => 'ARNPerf GPS vWin090517',
 
 	gps_com => 'com4',
 	gps_file => 'gps.txt',
@@ -36,7 +38,7 @@ my %app_conf = (
 	# Pos fix in Beijing
 	#gps_lat_fix = 0.0012;
 	#gps_lng_fix = 0.0061;
-	
+
 	bf_rx_length => 1024
 );
 
@@ -69,10 +71,10 @@ my $gps_file = $app_conf{gps_file};
 for(;;) {
 	my ($rx_bytes, $buffer) = &sp_read($sp, $app_conf{bf_rx_length});
 	my %pos = &gps_parse($rx_bytes, $buffer);
-	
+
 	&gps_print(%pos);
 	&gps_save($gps_file, %pos);
-	
+
 	sleep 1;
 	$i ++;
 }
@@ -87,9 +89,9 @@ for(;;) {
 # parse .conf file & user input
 sub conf_init {
 	my ($_conf, @_argv) = @_;
-	
+
 	my ($_ucom, $_ufile) = @_argv;
-	
+
 	if ($_ucom) {
 		$$_conf{gps_com} = $_ucom;
 	}
@@ -103,8 +105,8 @@ sub conf_init {
 # print usage when missing params
 sub print_version {
 	my ($v, $_com, $_file) = @_;
-	print "Version: $v, by 6Harmonics Qige @ 2017.01.17\n";
-	
+	print "Version: $v, by 6Harmonics Qige @ 2017.05.09\n";
+
 	die "\n =-= No COM PORT or FILE assigned =-=\n > perl gps_win.pl com4 gps.txt\n"
 		unless($_com and $_file);
 }
@@ -120,7 +122,7 @@ sub gps_parse {
 		heading => 0
 	);
 	my ($_buffer_length, $_buffer, $_lat_fix, $_lng_fix) = @_;
-	
+
 	chomp $_buffer;
 	open GPS_RAW, "<", \$_buffer;
 	while(my $line = <GPS_RAW>) {
@@ -129,7 +131,7 @@ sub gps_parse {
 		if ($line =~ /^\$GPRMC/gi) {
 			my $ts = &ts();
 			printf " -> (RAW data) %s\n ---> %s\n", $ts, $line;
-			
+
 			my ($proto,$utc,$v,$lat,$ns,$lng,$ew,$speed,$heading,$ymd) = split ',', $line;
 			if ($v and $v =~ /A/gi) {
 				my ($gps_lat, $gps_lng, $lat_i, $lng_i);
@@ -159,17 +161,17 @@ sub gps_parse {
 		}
 	}
 	close GPS_RAW;
-	
+
 	return %pos_latest;
 }
 
 
 sub gps_save {
 	my ($_file, %_pos) = @_;
-	
+
 	my $_data = sprintf "%s,%0.8f,%0.8f,%0.3f,%d",
 			$_pos{valid}, $_pos{lat}, $_pos{lng}, $_pos{speed}, $_pos{heading};
-			
+
 	file_write($_file, $_data);
 }
 
@@ -197,17 +199,17 @@ sub file_write {
 sub sp_try {
 	my $_sp;
 	my ($_com, $_baudrate) = @_;
-	
+
 	$_sp = new Win32::SerialPort($_com)
 		or die "* Cannot open $_com: $^E\n";
-	
+
 	$_sp->databits(8);
 	$_sp->parity('none');
 	$_sp->stopbits(1);
 	$_sp->handshake('none');
-	
+
 	$_sp->baudrate($_baudrate || 9600);
-	
+
 	return $_sp;
 }
 
@@ -234,4 +236,3 @@ sub ts {
 						$year, $mon, $day, $hour, $min, $sec;
 	return $datetime;
 }
-
