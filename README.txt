@@ -8,12 +8,12 @@ Send email to qige@6harmonics.com or zhaoqige@163.com.
 
 NOTE
 ----
-Field6CLI: ActivePerl + BAT
-Field6UI: LAMP + jQuery + Microsoft Bing Maps (JS SDK v7)
+ARNPerfCLI: ActivePerl + BAT
+ARNPerfUI: LAMP + jQuery + Microsoft Bing Maps (JS SDK v7)
 
 GITHUB
 ------
-https://github.com/zhaoqige/field6.git
+https://github.com/zhaoqige/arnperf.git
 
 DEPENDENCIES
 ------------
