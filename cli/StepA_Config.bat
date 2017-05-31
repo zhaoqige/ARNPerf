@@ -23,7 +23,7 @@ if "%note%" == "" set note=demo
 set /p loc="Default Test Location: (BQL-BJ-CN) "
 if "%loc%" == "" set loc=BQL-BJ-CN
 
-del ARNPerf.conf 2 > nul
+del ARNPerf.conf 2>nul
 pause
 
 echo %host%,%port%,%user%,%passwd%,%log%,%note%,%loc% > ARNPerf.conf

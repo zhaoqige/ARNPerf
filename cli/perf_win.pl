@@ -118,15 +118,15 @@ for(;;) {
 	&gps_print(%gps_crt);
 
 	# calc gps fence, decide to write kpi to log file
-	# 3> lost GPS
 	# 2> recover GPS
 	# 1> pass GPS FENCE
 	# 0> inside GPS FENCE
+	# -1> lost GPS
 	my $_flag_gps = &gps_calc(\%app_conf, \%gps_crt, \%gps_last);
 
 
 	# save log according to GPS calc
-	if ($_flag_gps) {
+	if ($_flag_gps > 0) {
 		&log_calc($_flag_gps, \%app_conf, \%kpi, \%gps_crt);
 	}
 
@@ -330,14 +330,14 @@ sub log_calc {
 		if ($_flag == 2) {
 			$_data = "+6w,config,$$_kpi{mac},$_note,$_location\n";
 			&log_save($_log, $_data);
+		} else {
+			#$_data = "+6w,$$_kpi{bssid},$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
+			$_data = sprintf "+6w,%s,%s,%.8f,%.8f,%d,%d,%.3f,%.3f,%.1f,%.3f,%d\n",
+						$_ts, $$_kpi{bssid},$$_gps{lat},$$_gps{lng},
+						$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},
+						$$_gps{speed},$$_gps{heading};
+			&log_append($_log, $_data);
 		}
-
-		#$_data = "+6w,$$_kpi{bssid},$$_gps{lat},$$_gps{lng},$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},$$_gps{speed},$$_gps{heading}\n";
-		$_data = sprintf "+6w,%s,%s,%.8f,%.8f,%d,%d,%.3f,%.3f,%.1f,%.3f,%d\n",
-					$_ts, $$_kpi{bssid},$$_gps{lat},$$_gps{lng},
-					$$_kpi{signal},$$_kpi{noise},$$_kpi{rx_thrpt},$$_kpi{tx_thrpt},$$_kpi{br},
-					$$_gps{speed},$$_gps{heading};
-		&log_append($_log, $_data);
 	}
 }
 
@@ -372,18 +372,19 @@ sub gps_calc {
 			$_result = 2;
 		}
 	} else {
-		$_result = 3;
+		$_result = -1;
 		#printf "dbg> write when los GPS SIGNAL\n";
 	}
 
 	printf " > GPS Fence Calculated @ %s\n", &ts();
-
-	# copy values
-	$$_gps_last{valid} = $$_gps_crt{valid};
-	$$_gps_last{lat} = $$_gps_crt{lat};
-	$$_gps_last{lng} = $$_gps_crt{lng};
-	$$_gps_last{speed} = $$_gps_crt{speed};
-	$$_gps_last{heading} = $$_gps_crt{heading};
+	if ($_result == 1 || $_result == 2) {
+		# copy values
+		$$_gps_last{valid} = $$_gps_crt{valid};
+		$$_gps_last{lat} = $$_gps_crt{lat};
+		$$_gps_last{lng} = $$_gps_crt{lng};
+		$$_gps_last{speed} = $$_gps_crt{speed};
+		$$_gps_last{heading} = $$_gps_crt{heading};
+	}
 
 	return $_result;
 }

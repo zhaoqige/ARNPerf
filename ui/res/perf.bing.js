@@ -96,9 +96,9 @@ var _bingMap = null, _mapConfig = null;
 				for(idx in data) {
 					var obj = data[idx];
 					var msg1 = idx + ' | ' + obj.signal + '/' + obj.noise + '/' + (obj.signal - obj.noise) + ' (unit: dBm)';
-					var thrpt = obj.rx + ', ' + obj.tx + ', ' + obj.br;
-					var ext = obj.ts + ' | ' + obj.speed + ' Km/h, hdg ' + obj.hdg;
-					var msg = msg1 + ' | ' + thrpt + ' Mbps | ' + ext;
+					var thrpt = obj.rx + ' Mbps (' + obj.rxmcs + '), ' + obj.tx + ' Mbps (' + obj.txmcs + ')';
+					var ext = obj.ts + ' | ' + obj.speed + ' Km/h';
+					var msg = msg1 + ' | ' + thrpt + '  | ' + ext;
 					var pos = this.pos(obj.lat, obj.lng);
 
 					var pin = this.pushpin(pos, 'res/icon-' + obj.level + '.png');
@@ -123,7 +123,7 @@ var _bingMap = null, _mapConfig = null;
 			var obj = e.target;
       var pos = obj.getLocation();
 			var infobox = new Microsoft.Maps.Infobox(pos, {
-				title: 'No. | Signal/Noise/SNR | Rx Tx Br | Timestamp | Speed',
+				title: 'No. | Signal/Noise/SNR | Rx Tx | Timestamp | Speed',
 				description: obj.msg,
 				visible: true,
 				width: 480, height: 90

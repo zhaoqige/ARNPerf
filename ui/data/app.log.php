@@ -83,7 +83,7 @@ class AppLog implements IApp
 					
 				} else if (strstr($buffer, '+6w')) {
 					$line = CSV::decode($buffer);
-					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $tx_thrpt, $br, $speed, $heading) = $line;
+					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $rxmcs, $tx_thrpt, $txmcs, $speed) = $line;
 					
 					// prepare for map center, zoom level
 					if ($i) {
@@ -106,9 +106,9 @@ class AppLog implements IApp
 							'noise' => $noise,
 							'rx' => number_format((float) $rx_thrpt, 3),
 							'tx' => number_format((float) $tx_thrpt, 3),
-							'br' => $br,
-							'speed' => $speed,
-							'hdg' => $heading
+							'rxmcs' => $rxmcs,
+							'txmcs' => $txmcs,
+							'speed' => $speed
 					);
 					
 					$this->calcPointStat($point);
