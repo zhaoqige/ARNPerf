@@ -1,7 +1,7 @@
 @echo off
-title "ARNPerf v6.1.090517"
+title "ARNPerf v7.0.101017-py"
 set DIR=%cd%
-set /p num="Enter GPS Module COM Number: 4 "
+set /p num="Enter GPS Sensor: (COM4) COM"
 if "%num%" == "" set num=4
-%DIR%\gps_win.pl com"%num%"
+%DIR%\GPS.pl com"%num%"
 pause

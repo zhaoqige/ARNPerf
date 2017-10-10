@@ -1,5 +1,5 @@
 @echo off
-title "ARNPerf v6.1.090517"
+title "ARNPerf v7.0.101017-py"
 set DIR=%cd%
-%DIR%\perf_win.pl
+%DIR%\Perf.py
 pause
