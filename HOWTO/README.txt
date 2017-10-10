@@ -1,6 +1,10 @@
-Perl for Windows platform:
-	http://www.activestate.com/activeperl
+Replace Perl with Python since 2017.10.10
+by Qige <qigezhao@gmail.com>
 
-Install "ActivePerl" first;
-In "cmd", exec "cpan install net-ssh2.ppd";
-In "ppm", find & install "win32-serialport".
+How to install Python:
+1. Download & install Python3;
+2. Run in Windows "cmd.exe":
+	"pip install pyserial"
+	"pip install paramiko"
+
+That's it! Sure easy than Perl!
