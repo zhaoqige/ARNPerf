@@ -1,7 +1,7 @@
 @echo off
 title "ARNPerf v7.0.101017-py"
 set DIR=%cd%
-set /p host="Enter host: (default = 192.168.1.24) 192.168.1."
+set /p host="Enter host: (default = 192.168.1.24) "
 if "%host%" == "" set host=24
 set /p log="Enter Log Filename: (d24fast.log) "
 if "%log%" == "" set log="d24fast.log"

@@ -187,29 +187,34 @@ Usage: "GPS.py com8 gps.txt"
 by Qige <qigezhao@gmail.com>
 2017.10.10
 """
-appVersion()
-
-print('> reading input ...')
-gpsCom, gpsFile = cliParams()
-
-serialFd = None
-if (not gpsCom is None):
-    print('> opening GPS Sensor:', gpsCom)
-    serialFd = spOpen(gpsCom)
-else:
-    print('> finding GPS Sensor ...')
-    spDevList = list(serial.tools.list_ports.comports())
-    if len(spDevList) <= 0:
-        print("error: NO GPS Sensor found!")
+def GPSRecorder():
+    appVersion()
+    
+    print('> reading input ...')
+    gpsCom, gpsFile = cliParams()
+    
+    serialFd = None
+    if (not gpsCom is None):
+        print('> opening GPS Sensor:', gpsCom)
+        serialFd = spOpen(gpsCom)
     else:
-        for spDev in spDevList:
-            serialFd = GPSSensorFindFd(spDev)
-            if (not serialFd is None):
-                break
+        print('> finding GPS Sensor ...')
+        spDevList = list(serial.tools.list_ports.comports())
+        if len(spDevList) <= 0:
+            print("error: NO GPS Sensor found!")
+        else:
+            for spDev in spDevList:
+                serialFd = GPSSensorFindFd(spDev)
+                if (not serialFd is None):
+                    break
+    
+    if (not serialFd is None):
+        print('> read & save GPS location ...')
+        GPSSensorSyncLatlng(serialFd, gpsFile)
+    else:
+        print('error> NO GPS Sensor valid!')
+        appHelp()
 
-if (not serialFd is None):
-    print('> read & save GPS location ...')
-    GPSSensorSyncLatlng(serialFd, gpsFile)
-else:
-    print('error> NO GPS Sensor valid!')
-    appHelp()
+
+# start GPS Recorder
+GPSRecorder()

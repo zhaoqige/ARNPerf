@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 Re-write "perf_win.pl" to "Perf.py"
-by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.12
+by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.11
 """
 
 import re
@@ -313,8 +313,8 @@ def GPSLocationRt():
 # GPS fence
 def GPSFenceBreach(pos1, pos2):
     #gpsFenceDistance = 0.0002 # about 10 meters
-    gpsFenceDistance = 0.0001 # about 5 meters
-    #gpsFenceDistance = 0.000001 # DEBUG USE ONLY!
+    #gpsFenceDistance = 0.0001 # about 5 meters
+    gpsFenceDistance = 0 # DEBUG USE ONLY!
     if (pos1 and pos2):
         p1lat = float(pos1[0])
         p1lng = float(pos1[1])
@@ -323,7 +323,7 @@ def GPSFenceBreach(pos1, pos2):
         
         gapLat = abs(p1lat - p2lat)
         gapLng = abs(p1lng - p2lng)
-        if (gapLat + gapLng > gpsFenceDistance):
+        if (gapLat + gapLng >= gpsFenceDistance):
             return 1
         
     return 0
