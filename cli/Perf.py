@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 Re-write "perf_win.pl" to "Perf.py"
-by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.11
+by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.12
 """
 
 import re
@@ -104,18 +104,21 @@ def cliParams():
 # Secure SHell
 def SSHConnect(host, user, passwd, port):
     ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
     try:
-        ssh.connect(host, port, user, passwd)
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())    
+        ssh.connect(host, port = int(port), 
+                    username = user, password = passwd, 
+                    allow_agent=False, look_for_keys=False)
         
-    except:
+    #except:
+    except paramiko.SSHException:
         ssh.close()
         ssh = None
         print('error> failed to connect', host, 
                 '(please check your input: ip, port, user, password)')
-        
+
     return ssh
+
 
 def SSHExec(ssh, cmd):
     # FIXME: if error?
@@ -394,7 +397,7 @@ def ARNPerfRecorder():
     #confHost = '192.168.1.24' # DEBUG USE ONLY!
     connParam = '%s:%s@%s:%s' % (confUser, confPasswd, confHost, confPort)
     print('> init connection', connParam, '...')
-    ssh = SSHConnect(confHost, 'root', 'root', 22)
+    ssh = SSHConnect(confHost, confUser, confPasswd, confPort)
     if (not ssh is None):
         ARNPerfRecord(ssh, configPerfArray)
         SSHClose(ssh)
