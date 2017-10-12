@@ -252,7 +252,7 @@ def ARNPerfPrint(arnData):
 
 def ARNPerfLogEnvSave(confHost, confLogfile, confNote, confLocation):
     try:
-        line = "+6w,config,%s,%s,%s\n" % (confHost, confNote, confLocation)
+        line = "+6w,config,%s,%s,%s" % (confHost, confNote, confLocation)
         fd = open(confLogfile, 'w')
         fd.write(line)
         fd.flush()
@@ -314,7 +314,7 @@ def GPSLocationRt():
 def GPSFenceBreach(pos1, pos2):
     #gpsFenceDistance = 0.0002 # about 10 meters
     gpsFenceDistance = 0.0001 # about 5 meters
-    #gpsFenceDistance = 0.000001 # about 10 meters
+    #gpsFenceDistance = 0.000001 # DEBUG USE ONLY!
     if (pos1 and pos2):
         p1lat = float(pos1[0])
         p1lng = float(pos1[1])
