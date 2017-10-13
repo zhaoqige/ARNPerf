@@ -1,9 +1,11 @@
 @echo off
 title "ARNPerf v7.0.121017-py"
 set DIR=%cd%
-set /p conf="Use ARNPerf.conf: y/N ? "
-if "%conf%" == "y" (
+set /p conf="Use ARNPerf.conf: Y/n ? "
+if ("%conf%" == "" OR "%conf%" == "y" OR "%conf%" == "Y") (
 	%DIR%\Perf.py
+	pause
+	exit
 ) else (
 	set /p hid="Enter Host IP: 192.168.1."
 	if "%hid%" == "" set hid="24"
@@ -14,5 +16,6 @@ if "%conf%" == "y" (
 	set /p location="Enter Location: (BQL) "
 	if "%location%" == "" set location="BQL"
 	%DIR%\Perf.py 192.168.1."%host%" "%log%" "%note%" "%location%"
+	pause
+	exit
 )
-pause

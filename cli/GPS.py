@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 Re-write "gps_win.pl" to "GPS.py"
-by Qige <qigezhao@gmail.com>, 2017.10.10
+by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.13
 
 Done:
     * verify with real GPS Sensor (GMOUSE VK-162, USB Mouse style);
@@ -43,6 +43,7 @@ def spOpen(serialName):
     try:
         serialFd = serial.Serial(serialName, timeout = 3)
         serialFd.baudrate       = 115200
+        #serialFd.baudrate       = 9600
         serialFd.bytesize       = 8
         serialFd.parity         = serial.PARITY_NONE;
         serialFd.stopbits       = 1
@@ -120,27 +121,29 @@ def ProtoNEMA0183DegreeConvert(degreeRaw, isSW):
 #return "A,39.0005,119.0005,0,0"
 def ProtoNEMA0183ParseRecord(gprmc_raw):
     gprmcList = gprmc_raw.split(',')
-    if len(gprmcList) >= 9:
-        gpsFlag     = 'A' if re.search('A', gprmcList[2]) \
-                        else 'V'
-        
-        gpsLat      = ProtoNEMA0183DegreeConvert(gprmcList[3], gprmcList[4]) \
-                        if (gprmcList[3] != '' and (gprmcList[4] != '')) \
-                        else 0
-        gpsLng      = ProtoNEMA0183DegreeConvert(gprmcList[5], gprmcList[6]) \
-                        if (gprmcList[6] != '' and (gprmcList[6] != '')) \
-                        else 0
-        # knots to km/h
-        gpsSpeed    = (float(gprmcList[7]) * 1.852) if (gprmcList[8] != '') \
-                        else 0
-        gpsHdg      = float(gprmcList[8]) if (gprmcList[8] != '') \
-                        else 0
-        
-        gpsLatlng = '%s,%.8f,%.8f,%.2f,%.1f' \
-                    % (gpsFlag, gpsLat, gpsLng, gpsSpeed, gpsHdg)
-        return gpsLatlng
-    
-    return 'V,,,,'
+    try:
+        if len(gprmcList) >= 9:
+            gpsFlag     = 'A' if re.search('A', gprmcList[2]) \
+                            else 'V'
+            
+            gpsLat      = ProtoNEMA0183DegreeConvert(gprmcList[3], gprmcList[4]) \
+                            if (gprmcList[3] != '' and (gprmcList[4] != '')) \
+                            else 0
+            gpsLng      = ProtoNEMA0183DegreeConvert(gprmcList[5], gprmcList[6]) \
+                            if (gprmcList[6] != '' and (gprmcList[6] != '')) \
+                            else 0
+            # knots to km/h
+            gpsSpeed    = (float(gprmcList[7]) * 1.852) if (gprmcList[8] != '') \
+                            else 0
+            gpsHdg      = float(gprmcList[8]) if (gprmcList[8] != '') \
+                            else 0
+            
+            gpsLatlng = '%s,%.8f,%.8f,%.2f,%.1f' \
+                        % (gpsFlag, gpsLat, gpsLng, gpsSpeed, gpsHdg)
+            return gpsLatlng
+
+    except:    
+        return 'V,,,,'
 
 # GPS sync
 def GPSSensorSyncLatlng(serialFd, gpsFile):
