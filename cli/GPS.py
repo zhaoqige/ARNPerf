@@ -17,6 +17,9 @@ import time
 import serial
 import serial.tools.list_ports
 
+FLAG_RUN = 1
+FLAG_DBG = 0
+
 
 # application
 def appVersion():
@@ -104,6 +107,9 @@ def ProtoNEMA0183FindGPRMC(data):
     if len(gpList) >= 1:
         for line in gpList:
             if re.search('GPRMC', line):
+                if (FLAG_DBG > 0):
+                    print('dbg> line:', line)
+                
                 gprmcRaw = line
                 break
     
@@ -120,8 +126,11 @@ def ProtoNEMA0183DegreeConvert(degreeRaw, isSW):
 
 #return "A,39.0005,119.0005,0,0"
 def ProtoNEMA0183ParseRecord(gprmc_raw):
-    gprmcList = gprmc_raw.split(',')
+    if (FLAG_DBG > 0):
+        print('dbg> $GPRMC:', gprmc_raw)
+    
     try:
+        gprmcList = gprmc_raw.split(',')
         if len(gprmcList) >= 9:
             gpsFlag     = 'A' if re.search('A', gprmcList[2]) \
                             else 'V'
@@ -153,7 +162,7 @@ def GPSSensorSyncLatlng(serialFd, gpsFile):
         
     if (not serialFd is None):
         print("-> reading GPS location from", serialFd.name, ">", outFile)
-        while 1:
+        while FLAG_RUN > 0:
             data = spRead(serialFd)
             if (not data is None):
                 gprmc_raw = ProtoNEMA0183FindGPRMC(data)

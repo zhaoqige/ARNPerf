@@ -13,6 +13,8 @@ import time
 
 import paramiko
 
+FLAG_RUN = 1
+FLAG_DBG = 0
 
 # pre define
 KPI_CACHE       = '/tmp/.perf.wls'
@@ -131,7 +133,8 @@ def SSHExec(ssh, cmd):
     # FIXME: if error?
     reply = None
     try:
-        stdin, stdout, stderr = ssh.exec_command(cmd)
+        #stdin, stdout, stderr = ssh.exec_command(cmd)
+        _, stdout, _ = ssh.exec_command(cmd)
         reply = stdout.readlines()
         
     except:
@@ -162,13 +165,15 @@ def thrptUnit(bits):
 # query & parse result
 def ARNPerfQuery(ssh):
     kpi = None
-    #print(CMD_THRPT)
+    if (FLAG_DBG > 0):
+        print('dbg> thrpt cmd: ', CMD_THRPT) # FIXME: DEBUG USE ONLY
+    
     try:
         rxtxBytesReply = SSHExec(ssh, CMD_THRPT)
         rxtxBytes = []
-        for bytes in rxtxBytesReply:
-            rxtxBytesRaw = re.split(r'[,\s\n\r\\\n\\\r]', bytes \
-                                      if (not bytes is None) and len(bytes) >= 1 \
+        for Bps in rxtxBytesReply:
+            rxtxBytesRaw = re.split(r'[,\s\n\r\\\n\\\r]', Bps \
+                                      if (not Bps is None) and len(Bps) >= 1 \
                                       else '0,0')
             rxtxBytes.extend(rxtxBytesRaw[0:2])
         
@@ -177,16 +182,27 @@ def ARNPerfQuery(ssh):
             brlan = rxtxBytes[2:4]
             wls = rxtxBytes[4:6]
             kpi = [int(eth[0])+int(brlan[0])+int(wls[0]), int(eth[1])+int(brlan[1])+int(wls[1])]
-            print('dbg> rx/tx eth bytes:', eth[0], eth[1])
-            print('dbg> rx/tx all bytes:', kpi[0], kpi[1])
+            
+            if (FLAG_DBG > 0):
+                print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
+                print('dbg> rx/tx brlan bytes:', brlan[0], brlan[1]) # FIXME: DEBUG USE ONLY
+                print('dbg> rx/tx wls bytes:', wls[0], wls[1]) # FIXME: DEBUG USE ONLY
+
         elif len(rxtxBytes) >= 4:
             eth = rxtxBytes[0:2]
             brlan = rxtxBytes[2:4]
             kpi = [int(eth[0])+int(brlan[0]), int(eth[1])+int(brlan[1])]
+
+            if (FLAG_DBG > 0):
+                print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
+                print('dbg> rx/tx brlan bytes:', brlan[0], brlan[1]) # FIXME: DEBUG USE ONLY
+                
         elif len(rxtxBytes) >= 2:
             eth = rxtxBytes[0:2]
             kpi = [int(eth[0]), int(eth[1])]
-            print('dbg> rx/tx eth bytes:', eth[0], eth[1])
+
+            if (FLAG_DBG > 0):
+                print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
             
     except:
         kpi = [0, 0]
@@ -261,7 +277,9 @@ def ARNPerfPrint(arnData):
         wmac, ssid, bssid, signal, noise, snr, br, msElapsed = arnData[8:16]
         
         # clear screen
-        os.system("cls");
+        if (FLAG_DBG == 0):
+            os.system("cls"); # FIXME: DEBUG USE ONLY
+
         print()
         print("                     ARNPerf CLI")
         print("        https://github.com/zhaoqige/arnperf.git")
@@ -274,7 +292,7 @@ def ARNPerfPrint(arnData):
         print()
         print("      Throughput: Rx = %s, Tx = %s" % (thrptUnit(rxThrpt), thrptUnit(txThrpt)))
         print()
-        print(" ->", msElapsed, 'second(s) passed')
+        print(" ->", msElapsed, 'second(s) passed,', ts)
         
         if (gpsValid == 'A'):
             print(' -> GCJ-02: %.8f,%.8f, speed %.3f km/h, hdg %.1f' \
@@ -303,13 +321,14 @@ def ARNPerfLogSave(logfile, arnData):
         if (not arnData is None) and len(arnData) >= 15:
             gpsLat, gpsLng, gpsSpeed, gpsHdg = arnData[1:5]
             rxThrpt, txThrpt = arnData[6:8]
-            wmac, ssid, bssid, signal, noise, snr, br = arnData[8:15]
+            #wmac, ssid, bssid, signal, noise, snr, br = arnData[8:15]
+            _, _, bssid, signal, noise, _, _ = arnData[8:15]
             
             fd = open(logfile, 'a')
             if fd:
                 # +6w,ts,wmac,lat,lng,signal,noise,rxthrpt,rxmcs,txthrpt,txmcs,speed,hdg
                 record = "+6w,%s,%s,%.8f,%.8f,%d,%d,%s,%s,%s,%s,%.3f,%.1f\n" \
-                            % (ts, wmac, float(gpsLat), float(gpsLng), int(signal), int(noise), \
+                            % (ts, bssid, float(gpsLat), float(gpsLng), int(signal), int(noise), \
                                thrptUnitMbps(rxThrpt), 'MCS -1', thrptUnitMbps(txThrpt), 'MCS -1', \
                                float(gpsSpeed), float(gpsHdg))
                 fd.write(record)
@@ -385,7 +404,7 @@ def ARNPerfRecord(ssh, configPerfArray):
     ARNPerfLogEnvSave(confHost, confLogfile, confNote, confLocation)
     
     # query device performance, setup GPS fence
-    while 1:
+    while FLAG_RUN > 0:
         perfRaw = ARNPerfQuery(ssh)
         gpsCrt = GPSLocationRt()
         arnData = ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast)
