@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 """
 Re-write "gps_win.pl" to "GPS.py"
-by Qige <qigezhao@gmail.com>, 2017.10.10-2017.10.13
+by Qige <qigezhao@gmail.com>
+2017.10.10-2017.10.13 compatible with u-blox6 GMOUSE GPS VK-162
+2017.10.16 compatible with u-blox7, Stoton GPS+BDS GNSS100B
+
 
 Done:
     * verify with real GPS Sensor (GMOUSE VK-162, USB Mouse style);
-
-TODO: 
     * Compatible with multi protocol.
 """
 
@@ -74,6 +75,30 @@ def spClose(serialFd):
     if (not serialFd is None):
         serialFd.close()
 
+# u-blox 6 chip: GPS, start with $GP*
+def GPSUblox6(msg):
+    if (not msg is None):
+        msgLength = len(msg)
+        if (msgLength >= 6):
+            flagUblox6 = re.search("GPRMC|GPGGA|GPGSA|GPGSV|GPVTG|GPGLL", \
+                        str(msg))
+            if (flagUblox6):
+                return 1
+    
+    return 0
+
+# u-blox 7 chip: GPS+BSD, start with $GN*
+def GPSUblox7(msg):
+    if (not msg is None):
+        msgLength = len(msg)
+        if (msgLength >= 6):
+            flagUblox7 = re.search("GNRMC|GNGGA|GNGSA|GBGSV|GNGSV|GNVTG|GNGLL", \
+                        str(msg))
+            if (flagUblox7):
+                return 1
+    
+    return 0
+
 # find first GPS Sensor, return fd
 def GPSSensorFindFd(spDev):
     spDesc = spDev[0]
@@ -85,9 +110,7 @@ def GPSSensorFindFd(spDev):
         #spData = ",,,,0000*1F$GPGGA,092204.999,4250.5589,S,14718.5084,E,1,04,24.4,19.7,M,,,,0000*1F"
         spDataLength = len(spData)
         if (spDataLength >= 6):
-            gpsMatch =  re.search("GPRMC|GPGGA|GPGSA|GPGSV|GPVTG|GPGLL", \
-                        str(spData))
-            if gpsMatch:
+            if GPSUblox6(spData) or GPSUblox7(spData):
                 serialName = serialFd.name
                 print("-> GPS sensor found:", serialName, '|', spDataLength, 'bytes')
                 return serialFd
@@ -95,7 +118,7 @@ def GPSSensorFindFd(spDev):
                 print(spData)
                 spClose(serialFd)
 
-    print('->', spDesc, '- Not GPS Sensor')
+    print('->', spDesc, '- Device Busy or Not GPS Sensor')
     return None
 
 # protocol: NEMA-0138
@@ -106,7 +129,7 @@ def ProtoNEMA0183FindGPRMC(data):
     gpList = re.split(r'[\n\r\\\n\\\r]', str(data))
     if len(gpList) >= 1:
         for line in gpList:
-            if re.search('GPRMC', line):
+            if re.search('GPRMC|GNRMC', line):
                 if (FLAG_DBG > 0):
                     print('dbg> line:', line)
                 
@@ -127,7 +150,7 @@ def ProtoNEMA0183DegreeConvert(degreeRaw, isSW):
 #return "A,39.0005,119.0005,0,0"
 def ProtoNEMA0183ParseRecord(gprmc_raw):
     if (FLAG_DBG > 0):
-        print('dbg> $GPRMC:', gprmc_raw)
+        print('dbg> $G*RMC:', gprmc_raw) # $GPRMC or $GNRMC
     
     try:
         gprmcList = gprmc_raw.split(',')
