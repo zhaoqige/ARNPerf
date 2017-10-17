@@ -18,7 +18,6 @@ set /p location="Enter Location: (BQL) "
 if "%location%" == "" set location="BQL"
 %DIR%\Perf.py 192.168.1."%host%" "%log%" "%note%" "%location%"
 
-echo
 pause
 exit
 
@@ -26,6 +25,5 @@ exit
 echo * using ARNPerf.conf
 %DIR%\Perf.py
 
-echo
 pause
 exit

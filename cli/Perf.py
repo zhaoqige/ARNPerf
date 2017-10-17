@@ -5,6 +5,8 @@ by Qige <qigezhao@gmail.com>
 v7.0 2017.10.10-2017.10.12  Basic ARNPerf function: GPS + Query + GPSFence
 v7.1 2017.10.13             Collecting 3x ifname throughput (eth0, br-lan, wlan0); unknown gps lat/lng
 v7.1.1 2017.10.17           Handle no "gps.txt"
+
+2017.10.17 final re-format
 """
 
 import re
@@ -18,6 +20,9 @@ FLAG_RUN = 1
 FLAG_DBG = 0
 
 # pre define
+GPS_SENSOR      = 'gps.txt'
+PERF_CONF       = 'ARNPerf.conf'
+
 KPI_CACHE       = '/tmp/.perf.wls'
 KPI_IFNAME      = 'wlan0'
 THRPT_CACHE     = '/tmp/.perf.thrpt'
@@ -64,35 +69,36 @@ def appVersion():
     print('-----------------------------------------------------')
 
 def appHelp():
-    print('Usage: Perf.py [hostip] [logfile] [note] [locations]')
+    print('Usage: Perf.py [hostip [logfile [note [locations]]]]')
 
 
 # priority: user cli assigned 
 def appConfigLoad(host, logfile, note, location):
     print('-> loading config file ...')
     #return '192.168.1.24','d24fast.log','demo','BJOffice'
-    noneArray = [None, None, None, None, None, None, None]
+    noneArray = [ None, None, None, None, None, None, None ]
     rHost, rPort, rUser, rPasswd, rLogfile, rNote, rLocation = noneArray
-    conf = fileRead('ARNPerf.conf')
-    if (not conf is None):
+    conf = fileRead(PERF_CONF)
+    if conf:
         confList = conf.split(',')
         rHost, rPort, rUser, rPasswd = confList[0:4]
         rLogfile, rNote, rLocation = confList[4:7] # 0-6, but 7th not included
     
     # replace and decide right params
-    if (not host is None):
+    if host:
         rHost = host
         
-    if (not logfile is None):
+    if logfile:
         rLogfile = logfile
         
-    if (not note is None):
+    if note:
         rNote = note
         
-    if (not location is None):
+    if location:
         rLocation = location
-        
-    if (rHost is None):
+    
+    # default value
+    if not rHost:
         rHost = '192.168.1.24'
         rPort = 22
         rUser = 'root'
@@ -101,21 +107,30 @@ def appConfigLoad(host, logfile, note, location):
         rNote = 'demo'
         rLocation = 'BJDev'
         
-    return [rHost, rPort, rUser, rPasswd, rLogfile, rNote, rLocation]
+    return [ rHost, rPort, rUser, rPasswd, rLogfile, rNote, rLocation ]
 
 def cliParams():
     print('-> reading user input ...')
-    if len(sys.argv) >= 4:
+    if len(sys.argv) >= 5:
         return sys.argv[1:5] # 1-4, but 5th not included
+
+    if len(sys.argv) >= 4:
+        return [ sys.argv[1:4], None ]
+
+    if len(sys.argv) >= 3:
+        return [ sys.argv[1:3], None, None ]
+
+    if len(sys.argv) >= 2:
+        return [ sys.argv[1], None, None, None ]
     
-    return [None, None, None, None]
+    return [ None, None, None, None ]
 
 
 # Secure SHell
 def SSHConnect(host, user, passwd, port):
     ssh = paramiko.SSHClient()
     try:
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())    
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # any remote (~/.ssh/known_hosts)    
         ssh.connect(host, port = int(port), 
                     username = user, password = passwd, 
                     allow_agent=False, look_for_keys=False)
@@ -174,7 +189,7 @@ def ARNPerfQuery(ssh):
         rxtxBytes = []
         for Bps in rxtxBytesReply:
             rxtxBytesRaw = re.split(r'[,\s\n\r\\\n\\\r]', Bps \
-                                      if (not Bps is None) and len(Bps) >= 1 \
+                                      if Bps and len(Bps) >= 1 \
                                       else '0,0')
             rxtxBytes.extend(rxtxBytesRaw[0:2])
         
@@ -182,7 +197,7 @@ def ARNPerfQuery(ssh):
             eth = rxtxBytes[0:2]
             brlan = rxtxBytes[2:4]
             wls = rxtxBytes[4:6]
-            kpi = [int(eth[0])+int(brlan[0])+int(wls[0]), int(eth[1])+int(brlan[1])+int(wls[1])]
+            kpi = [ int(eth[0])+int(brlan[0])+int(wls[0]), int(eth[1])+int(brlan[1])+int(wls[1]) ]
             
             if (FLAG_DBG > 0):
                 print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
@@ -192,7 +207,7 @@ def ARNPerfQuery(ssh):
         elif len(rxtxBytes) >= 4:
             eth = rxtxBytes[0:2]
             brlan = rxtxBytes[2:4]
-            kpi = [int(eth[0])+int(brlan[0]), int(eth[1])+int(brlan[1])]
+            kpi = [ int(eth[0])+int(brlan[0]), int(eth[1])+int(brlan[1]) ]
 
             if (FLAG_DBG > 0):
                 print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
@@ -200,26 +215,26 @@ def ARNPerfQuery(ssh):
                 
         elif len(rxtxBytes) >= 2:
             eth = rxtxBytes[0:2]
-            kpi = [int(eth[0]), int(eth[1])]
+            kpi = [ int(eth[0]), int(eth[1]) ]
 
             if (FLAG_DBG > 0):
                 print('dbg> rx/tx eth bytes:', eth[0], eth[1]) # FIXME: DEBUG USE ONLY
             
     except:
-        kpi = [0, 0]
+        print('error> Device Query FAILED')
 
     # re-check        
-    if (kpi is None):
-        kpi = [0, 0]
+    if not kpi:
+        kpi = [ 0, 0 ]
     
     try:
         #print(CMD_KPI)
         wlsRaw = ["00:00:00:00:00:00", "00:00:00:00:00:00", '-', 0, 0, 0]
         wlsRawReply = SSHExec(ssh, CMD_KPI)
-        if (not wlsRawReply is None) and len(wlsRawReply) >= 1:
+        if wlsRawReply and len(wlsRawReply) >= 1:
             del wlsRaw[:]
             for val in wlsRawReply:
-                wlsRaw.extend([str(val).strip()])
+                wlsRaw.extend([ str(val).strip() ])
         
         if len(wlsRaw) >= 7:
             kpi.extend(wlsRaw[0:7])
@@ -234,7 +249,7 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
     msTsNow = time.time()
     msElapsed = round(abs(msTsNow - msTsLast), 3)
     
-    if (not perfRaw is None) and len(perfRaw) >= 9:
+    if perfRaw and len(perfRaw) >= 9:
         wmac, ssid, bssid, signal, noise1, noise2, br = perfRaw[2:9]
         
         if (signal != 'unknown'):
@@ -251,7 +266,7 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
         if (br != 'unknown'):
             br8m = float(br)/20*8
     
-    if (not perfRaw is None) and len(perfRaw) >= 2:
+    if perfRaw and len(perfRaw) >= 2:
         rxBytes, txBytes = perfRaw[0:2]
         intThrptLastRx = int(thrptLast[0])
         intThrptLastTx = int(thrptLast[1])
@@ -266,13 +281,13 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
         fmtTxThrpt = thrptFormat(txThrpt)
 
     data = gpsCrt
-    data.extend([fmtRxThrpt, fmtTxThrpt])
-    data.extend([wmac, ssid, bssid, intSignal, intNoise, snr, br8m, msElapsed])
+    data.extend([ fmtRxThrpt, fmtTxThrpt ])
+    data.extend([ wmac, ssid, bssid, intSignal, intNoise, snr, br8m, msElapsed ])
     return data
 
 # display KPI
 def ARNPerfPrint(arnData):
-    if (not arnData is None) and len(arnData) >= 16:
+    if arnData and len(arnData) >= 16:
         gpsValid, gpsLat, gpsLng, gpsSpeed, gpsHdg, ts = arnData[0:6]
         rxThrpt, txThrpt = arnData[6:8]
         wmac, ssid, bssid, signal, noise, snr, br, msElapsed = arnData[8:16]
@@ -319,7 +334,7 @@ def ARNPerfLogSave(logfile, arnData):
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
     print(' ====> log saved at', ts, '-', logfile)
     try:
-        if (not arnData is None) and len(arnData) >= 15:
+        if arnData and len(arnData) >= 15:
             gpsLat, gpsLng, gpsSpeed, gpsHdg = arnData[1:5]
             rxThrpt, txThrpt = arnData[6:8]
             #wmac, ssid, bssid, signal, noise, snr, br = arnData[8:15]
@@ -343,7 +358,7 @@ def ARNPerfLogSave(logfile, arnData):
 # read from exchange file
 def GPSLocationRtRaw():
     gpsRaw = None
-    gpsFile = 'gps.txt';
+    gpsFile = GPS_SENSOR;
     
     try:
         fd = open(gpsFile, 'r')
@@ -353,7 +368,7 @@ def GPSLocationRtRaw():
         
         fd.close()
         
-    excep:
+    except:
         print('error> NO GPS Sensor connected')
         
     return gpsRaw
@@ -361,12 +376,12 @@ def GPSLocationRtRaw():
 # return & validate GPS lat,lng
 def GPSLocationRt():
     gpsRaw = GPSLocationRtRaw()
-    if len(gpsRaw) >= 6:
+    if gpsRaw and len(gpsRaw) >= 6:
         gpsValid = gpsRaw[0]
         if (gpsValid == 'A'):
             return gpsRaw[:6]
         
-    return ['V', 0,0,0,0]
+    return [ 'V', 0, 0, 0, 0 ]
 
 # GPS fence
 def GPSFenceBreach(pos1, pos2):
@@ -422,7 +437,7 @@ def ARNPerfRecord(ssh, configPerfArray):
         
         # save for next time
         gpsLast = gpsCrt[1:3]
-        if (not perfRaw is None) and len(perfRaw) >= 2:
+        if perfRaw and len(perfRaw) >= 2:
             thrptLast = perfRaw[0:2]
         
         time.sleep(0.85)
@@ -452,13 +467,13 @@ def ARNPerfRecorder():
     
     #confHost = '192.168.1.24' # DEBUG USE ONLY!
     connParam = '%s:%s@%s:%s' % (confUser, confPasswd, confHost, confPort)
-    print('> init connection', connParam, '...')
+    print('> connecting to', connParam, '...')
     ssh = SSHConnect(confHost, confUser, confPasswd, confPort)
-    if (not ssh is None):
+    if ssh:
         ARNPerfRecord(ssh, configPerfArray)
         SSHClose(ssh)
     else:
-        if (not confHost is None):
+        if confHost:
             print('error> Device [%s] unreachable!'% (confHost))
         else:
             print('error> Unknown device!')
