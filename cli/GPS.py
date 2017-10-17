@@ -5,6 +5,7 @@ by Qige <qigezhao@gmail.com>
 2017.10.10-2017.10.13 compatible with u-blox6 GMOUSE GPS VK-162
 2017.10.16 compatible with u-blox7, Stoton GPS+BDS GNSS100B
 2017.10.17 final re-format
+2017.10.17 read hex & ascii GPS Sensor data. not verified yet
 
 Done:
     * verify with real GPS Sensor (GMOUSE VK-162, USB Mouse style);
@@ -42,7 +43,24 @@ def cliParams():
         return sys.argv[1], None
     
     return None, None
-    
+
+
+def HexToAscii(data):
+    if data and len(data) > 0:
+        result = []
+        for c in data:
+            try:
+                cs = chr(c)
+            except:
+                cs = chr(str(c))
+                                
+            if re.match('[0-9a-zA-Z,\$,\*\.\\\\]', cs): # 0-9a-z
+                result.extend(cs)
+
+        return ''.join(result)
+
+    return None
+
 # serial port handler
 def spOpen(serialName):
     # 115200/8/N/1
@@ -69,7 +87,13 @@ def spOpen(serialName):
 def spRead(serialFd):
     if serialFd and (serialFd.readable()):
         buffer = serialFd.read(512)
-        return buffer
+        #buffer = '\xc4\xe3\xba\xc3\xb0\xa1121A\xba\xc5'
+        #buffer = '00*1F$GPGGA,092204.999,4250.5589,S,14718.5084,E,1,04,24.4,19.7,M,,,,0000*1F'
+        if buffer:
+            #return buffer # v7.1.2
+            # v7.1.3 fix hex data from GPS Sensor
+            data = HexToAscii(buffer)
+            return data
     
     return None
 
@@ -123,7 +147,7 @@ def GPSSensorFindFd(spDev):
                     print("-> GPS sensor found:", serialName, '|', spDataLength, 'bytes')
                     return serialFd
                 else:
-                    print(spData)
+                    if spData.isalnum(): print(spData)
                     spClose(serialFd)
 
         else:
@@ -140,7 +164,7 @@ def GPSSensorFindFd(spDev):
 def ProtoNEMA0183FindGPRMC(data):
     gprmcRaw = None
     if data:
-        gpList = re.split(r'[\n\r\\\n\\\r]', str(data))
+        gpList = re.split(r'[\$\n\r\\\n\\\r]', str(data))
         if gpList and len(gpList) >= 1:
             for line in gpList:
                 if line and re.search('GPRMC|GNRMC', line):
@@ -186,7 +210,9 @@ def ProtoNEMA0183ParseRecord(gprmc_raw):
             return gpsLatlng
 
     except:    
-        return 'V,,,,'
+        print('error> Bad G*RMC record')
+    
+    return 'V,,,,'
 
 # GPS sync
 def GPSSensorSyncLatlng(serialFd, gpsFile):
