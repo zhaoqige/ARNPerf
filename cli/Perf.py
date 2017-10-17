@@ -4,6 +4,7 @@ Re-write "perf_win.pl" to "Perf.py"
 by Qige <qigezhao@gmail.com>
 v7.0 2017.10.10-2017.10.12  Basic ARNPerf function: GPS + Query + GPSFence
 v7.1 2017.10.13             Collecting 3x ifname throughput (eth0, br-lan, wlan0); unknown gps lat/lng
+v7.1.1 2017.10.17           Handle no "gps.txt"
 """
 
 import re
@@ -344,12 +345,17 @@ def GPSLocationRtRaw():
     gpsRaw = None
     gpsFile = 'gps.txt';
     
-    fd = open(gpsFile, 'r')
-    if (fd):
-        gpsRawStr = fd.read(64)
-        gpsRaw = str(gpsRawStr).split(',')
-    
-    fd.close()
+    try:
+        fd = open(gpsFile, 'r')
+        if (fd):
+            gpsRawStr = fd.read(64)
+            gpsRaw = str(gpsRawStr).split(',')
+        
+        fd.close()
+        
+    excep:
+        print('error> NO GPS Sensor connected')
+        
     return gpsRaw
 
 # return & validate GPS lat,lng
