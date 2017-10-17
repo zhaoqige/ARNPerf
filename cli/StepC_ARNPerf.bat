@@ -16,7 +16,7 @@ set /p note="Enter Note: (demo) "
 if "%note%" == "" set note="demo"
 set /p location="Enter Location: (BQL) "
 if "%location%" == "" set location="BQL"
-%DIR%\Perf.py 192.168.1."%host%" "%log%" "%note%" "%location%"
+%DIR%\Perf.py 192.168.1."%hid%" "%log%" "%note%" "%location%"
 
 pause
 exit
