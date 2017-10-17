@@ -4,11 +4,11 @@ MIT License
 
 SUPPORT
 -------
-Send email to qige@6harmonics.com or zhaoqige@163.com.
+Send email to <qigezhao@gmail.com>.
 
 NOTE
 ----
-ARNPerfCLI: ActivePerl + BAT
+ARNPerfCLI: Python-3.3.6 + PySerial + paramiko
 ARNPerfUI: LAMP + jQuery + Microsoft Bing Maps (JS SDK v7)
 
 GITHUB
@@ -17,8 +17,8 @@ https://github.com/zhaoqige/arnperf.git
 
 DEPENDENCIES
 ------------
- + ActivePerl: Windows Perl Package;
- + Win32::SerialPort: Open/read Serial Port;
- + Net::SSH2: Perl SSH Module;
- + Time::HiRes: Timestamp Module;
- + iwinfo: calling "iwinfo wlan0 i" for baseband data.
+ + Python Windows version (v3.6.3);
+ + PySerial: Open/read GPS Sensor;
+ + Paramiko: Python SSH Module;
+ + iwinfo: calling "iwinfo wlan0 i" for baseband data;
+ + /proc/net/dev: calculate realtime throughput.
