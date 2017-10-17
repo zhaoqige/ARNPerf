@@ -69,7 +69,8 @@ def appVersion():
     print('-----------------------------------------------------')
 
 def appHelp():
-    print('Usage: Perf.py [hostip [logfile [note [locations]]]]')
+    print('Usage: Perf.py [hostip [logfile [note [locations]]]] # with ARNPerf.conf')
+    print('Usage: Perf.py hostip [logfile [note [locations]]]   # without ARNPerf.conf')
 
 
 # priority: user cli assigned 
@@ -97,14 +98,20 @@ def appConfigLoad(host, logfile, note, location):
     if location:
         rLocation = location
     
-    # default value
-    if not rHost:
+    # default value with no ARNPerf.conf & no cli
+    if (not rHost):
         rHost = '192.168.1.24'
+    if (not rPort):
         rPort = 22
+    if (not rUser):
         rUser = 'root'
+    if (not rPasswd):
         rPasswd = 'root'
+    if (not rLogfile):
         rLogfile = 'd24fast.log'
+    if (not rNote):
         rNote = 'demo'
+    if (not rLocation):
         rLocation = 'BJDev'
         
     return [ rHost, rPort, rUser, rPasswd, rLogfile, rNote, rLocation ]
@@ -456,7 +463,9 @@ def ARNPerfRecorder():
     
     print('> reading config (user input, config file) ...')
     host, logfile, note, location = cliParams()
+    print('dbg>', host, logfile, note, location)
     configArray = appConfigLoad(host, logfile, note, location)
+    print('dbg>', configArray)
     if len(configArray) >= 4:
         confHost, confPort, confUser, confPasswd = configArray[0:4]
         
