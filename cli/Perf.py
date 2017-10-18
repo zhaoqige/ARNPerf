@@ -381,10 +381,10 @@ def GPSLocationRtRaw():
 # return & validate GPS lat,lng
 def GPSLocationRt():
     gpsRaw = GPSLocationRtRaw()
-    if gpsRaw and len(gpsRaw) >= 6:
+    if gpsRaw and len(gpsRaw) >= 5:
         gpsValid = gpsRaw[0]
         if (gpsValid == 'A'):
-            return gpsRaw[:6]
+            return gpsRaw[0:5]
         
     return [ 'V', 0, 0, 0, 0 ]
 
