@@ -27,12 +27,12 @@ GPS_SENSOR      = 'gps.txt'
 
 # application
 def appVersion():
-    print('ARNPerf v7.0 (https://github.com/zhaoqige/arnperf.git')
-    print('---- by Qige <qigezhao@gmail.com> v7.0.101017-py ----')
-    print('-----------------------------------------------------')
+    print('ARNPerf v7.1.4 (https://github.com/zhaoqige/arnperf.git')
+    print('---- by Qige <qigezhao@gmail.com> v7.1.4.181017-py ----')
+    print('-------------------------------------------------------')
 
 def appHelp():
-    print('Usage: GSP.py com8 [gps.txt] # user defined GPS Sensor & output file')
+    print('Usage: GSP.py com4 [gps.txt] # user defined GPS Sensor & output file')
     print('Usage: GSP.py                # find GPS Sensor, then write to "gps.txt"')
 
 def cliParams():
@@ -52,8 +52,9 @@ def HexToAscii(data):
             try:
                 cs = chr(c)
             except:
-                cs = chr(str(c))
-                                
+                #cs = chr(str(c))
+                cs = chr(ord(c))
+
             if re.match('[0-9a-zA-Z,\$,\*\.\\\\]', cs): # 0-9a-z
                 result.extend(cs)
 
@@ -73,7 +74,7 @@ def spOpen(serialName):
             serialFd.parity         = serial.PARITY_NONE;
             serialFd.stopbits       = 1
             
-            serialFd.timeout        = 1.5
+            serialFd.timeout        = 3
             serialFd.writeTimeout   = 1
             
             if serialFd and serialFd.readable():
@@ -108,7 +109,7 @@ def spClose(serialFd):
 # u-blox 6 chip: GPS, start with $GP*
 def GPSUblox6(msg):
     if msg and len(msg) >= 6:
-        flagUblox6 = re.search("GPRMC|GPGGA|GPGSA|GPGSV|GPVTG|GPGLL", \
+        flagUblox6 = re.search("GPRMC|GPGGA|GPGSA|GPGSV|GPVTG|GPGLL|GPTXT", \
                     str(msg))
         
         if (flagUblox6):
@@ -119,7 +120,7 @@ def GPSUblox6(msg):
 # u-blox 7 chip: GPS+BSD, start with $GN*
 def GPSUblox7(msg):
     if msg and len(msg) >= 6:
-        flagUblox7 = re.search("GNRMC|GNGGA|GNGSA|GBGSV|GNGSV|GNVTG|GNGLL", \
+        flagUblox7 = re.search("GNRMC|GNGGA|GNGSA|GBGSV|GNGSV|GNVTG|GNGLL|GNTXT", \
                     str(msg))
         
         if (flagUblox7):

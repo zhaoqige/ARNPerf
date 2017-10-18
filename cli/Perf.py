@@ -5,6 +5,7 @@ by Qige <qigezhao@gmail.com>
 v7.0 2017.10.10-2017.10.12  Basic ARNPerf function: GPS + Query + GPSFence
 v7.1 2017.10.13             Collecting 3x ifname throughput (eth0, br-lan, wlan0); unknown gps lat/lng
 v7.1.1 2017.10.17           Handle no "gps.txt"
+v7.1.4 2017.10.18           Boya verified
 
 2017.10.17 final re-format
 """
@@ -64,9 +65,9 @@ def fileRead(conffile):
 
 # application
 def appVersion():
-    print('ARNPerf v7.1 (https://github.com/zhaoqige/arnperf.git')
-    print('---- by Qige <qigezhao@gmail.com> v7.0.101017-py ----')
-    print('-----------------------------------------------------')
+    print('ARNPerf v7.1.4 (https://github.com/zhaoqige/arnperf.git')
+    print('---- by Qige <qigezhao@gmail.com> v7.1.4.181017-py ----')
+    print('-------------------------------------------------------')
 
 def appHelp():
     print('Usage: Perf.py [hostip [logfile [note [locations]]]] # with ARNPerf.conf')
@@ -88,13 +89,10 @@ def appConfigLoad(host, logfile, note, location):
     # replace and decide right params
     if host:
         rHost = host
-        
     if logfile:
         rLogfile = logfile
-        
     if note:
         rNote = note
-        
     if location:
         rLocation = location
     
@@ -294,10 +292,10 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
 
 # display KPI
 def ARNPerfPrint(arnData):
-    if arnData and len(arnData) >= 16:
-        gpsValid, gpsLat, gpsLng, gpsSpeed, gpsHdg, ts = arnData[0:6]
-        rxThrpt, txThrpt = arnData[6:8]
-        wmac, ssid, bssid, signal, noise, snr, br, msElapsed = arnData[8:16]
+    if arnData and len(arnData) >= 15:
+        gpsValid, gpsLat, gpsLng, gpsSpeed, gpsHdg = arnData[0:5]
+        rxThrpt, txThrpt = arnData[5:7]
+        wmac, ssid, bssid, signal, noise, snr, br, msElapsed = arnData[7:15]
         
         # clear screen
         if (FLAG_DBG == 0):
@@ -310,13 +308,13 @@ def ARNPerfPrint(arnData):
         print("             MAC:", wmac if (wmac != '') else '00:00:00:00:00:00')
         print("            SSID:", ssid.strip('"') if (ssid != '') else '-')
         print("           BSSID:", bssid if (bssid != '') else '00:00:00:00:00:00')
-        print("    Signal/Noise: %d/%d dBm, SNR = %d" % (signal, noise, snr))
-        print("         Bitrate: %.3f Mbit/s" % (br));
+        print("    Signal/Noise: %d/%d dBm, SNR = %d" % (int(signal), int(noise), int(snr)))
+        print("         Bitrate: %.3f Mbit/s" % (float(br)));
         print()
         print("      Throughput: Rx = %s, Tx = %s" % (thrptUnit(rxThrpt), thrptUnit(txThrpt)))
         print()
-        print(" ->", msElapsed, 'second(s) passed,', ts)
-        
+        print(" ->", msElapsed, 'second(s) passed')
+
         if (gpsValid == 'A'):
             print(' -> GCJ-02: %.8f,%.8f, speed %.3f km/h, hdg %.1f' \
                   % (float(gpsLat), float(gpsLng), float(gpsSpeed), float(gpsHdg)))
@@ -343,9 +341,9 @@ def ARNPerfLogSave(logfile, arnData):
     try:
         if arnData and len(arnData) >= 15:
             gpsLat, gpsLng, gpsSpeed, gpsHdg = arnData[1:5]
-            rxThrpt, txThrpt = arnData[6:8]
+            rxThrpt, txThrpt = arnData[5:7]
             #wmac, ssid, bssid, signal, noise, snr, br = arnData[8:15]
-            _, _, bssid, signal, noise, _, _ = arnData[8:15]
+            _, _, bssid, signal, noise, _, _, _ = arnData[7:15]
             
             fd = open(logfile, 'a')
             if fd:
@@ -378,7 +376,7 @@ def GPSLocationRtRaw():
     except:
         print('error> NO GPS Sensor connected')
         
-    return gpsRaw
+    return gpsRaw[0:5]
 
 # return & validate GPS lat,lng
 def GPSLocationRt():
@@ -463,12 +461,14 @@ def ARNPerfRecorder():
     
     print('> reading config (user input, config file) ...')
     host, logfile, note, location = cliParams()
-    print('dbg>', host, logfile, note, location)
     configArray = appConfigLoad(host, logfile, note, location)
-    print('dbg>', configArray)
     if len(configArray) >= 4:
         confHost, confPort, confUser, confPasswd = configArray[0:4]
-        
+
+    if (FLAG_DBG > 0):
+        print('dbg>', host, logfile, note, location)
+        print('dbg>', configArray)
+
     configPerfArray = None
     if len(configArray) >= 7:
         configPerfArray = [confHost]

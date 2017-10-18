@@ -16,14 +16,14 @@ set /p note="Enter Note: (demo) "
 if "%note%" == "" set note="demo"
 set /p location="Enter Location: (BQL) "
 if "%location%" == "" set location="BQL"
-%DIR%\Perf.py 192.168.1."%hid%" "%log%" "%note%" "%location%"
+python %DIR%\Perf.py 192.168.1."%hid%" "%log%" "%note%" "%location%"
 
 pause
 exit
 
 :arnperf7conf
 echo * using ARNPerf.conf
-%DIR%\Perf.py
+python %DIR%\Perf.py
 
 pause
 exit
