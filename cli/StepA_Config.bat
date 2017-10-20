@@ -1,5 +1,5 @@
 @echo off
-title "ARNPerf v6.1.090517 Config"
+title "ARNPerf v7.0.101017-py"
 set DIR=%cd%
 
 set /p host="Default SSH Host: (192.168.1.24) "

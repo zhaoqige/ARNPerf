@@ -95,7 +95,11 @@ class AppLog implements IApp
 						$map['lat']['min'] = $map['lat']['max'] = $lat;
 						$map['lng']['min'] = $map['lng']['max'] = $lng;
 					}
-					
+
+					// in case min = 0; bug fix @ 2017.10.11
+					if ($map['lat']['min'] == 0) $map['lat']['min'] = $lat;
+					if ($map['lat']['max'] == 0) $map['lat']['max'] = $lat;
+
 					// save point
 					$point = array(
 							'ts' => $ts,
