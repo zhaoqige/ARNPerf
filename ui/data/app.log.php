@@ -98,7 +98,7 @@ class AppLog implements IApp
 
 					// in case min = 0; bug fix @ 2017.10.11
 					if ($map['lat']['min'] == 0) $map['lat']['min'] = $lat;
-					if ($map['lat']['max'] == 0) $map['lat']['max'] = $lat;
+					if ($map['lng']['min'] == 0) $map['lng']['min'] = $lng;
 
 					// save point
 					$point = array(
