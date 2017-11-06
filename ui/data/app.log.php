@@ -87,7 +87,9 @@ class AppLog implements IApp
 					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $rxmcs, $tx_thrpt, $txmcs, $speed) = $line;
           
           // v1.2.061117
-          $lat += $this->_fixLat; $lng += $this->_fixLng; 
+          if ($lat + $lng > 0) {
+            $lat += $this->_fixLat; $lng += $this->_fixLng; 
+          }
 					
 					// prepare for map center, zoom level
 					if ($i) {
@@ -166,7 +168,12 @@ class AppLog implements IApp
 		
 		$_result['center']['lat'] = ($latMin + $latMax) / 2;
 		$_result['center']['lng'] = ($lngMin + $lngMax) / 2;
-		
+
+		$_result['lat']['min'] = (float) number_format($latMin, 8);
+		$_result['lat']['max'] = (float) number_format($latMax, 8);
+		$_result['lng']['min'] = (float) number_format($lngMin, 8);
+		$_result['lng']['max'] = (float) number_format($lngMax, 8);
+    
 		$_result['gap']['lat'] = (float) number_format($latGap, 8);
 		$_result['gap']['lng'] = (float) number_format($lngGap, 8);
 		$_result['zoom'] = $zoom;
