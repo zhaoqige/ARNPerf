@@ -10,12 +10,13 @@ require_once 'data.csv.php';
  *
  * @desc		parse .log file into array()
  * @author 		QZ
- * @version 	1.1.231216a/1.1.180117
- * @verified 	2016.12.23/2017.01.18
+ * @version 	1.1.231216a/1.1.180117/1.2.061117 (BingMaps SDK Async)
+ * @verified 	2016.12.23/2017.01.18/2017.11.06
  */
 class AppLog implements IApp
 {
 	private $_snrGroundFix = 8;
+  private $_fixLat = 0.00125, $_fixLng = 0.00605; // v1.2.061117
 	
 	private $_fileHandle = null, $_filePath = './log/', $_filename = '', $_assort = 1;
 	private $_limitLineSizeMax = 1024;
@@ -84,6 +85,9 @@ class AppLog implements IApp
 				} else if (strstr($buffer, '+6w')) {
 					$line = CSV::decode($buffer);
 					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $rxmcs, $tx_thrpt, $txmcs, $speed) = $line;
+          
+          // v1.2.061117
+          $lat += $this->_fixLat; $lng += $this->_fixLng; 
 					
 					// prepare for map center, zoom level
 					if ($i) {
