@@ -254,6 +254,26 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
     msTsNow = time.time()
     msElapsed = round(abs(msTsNow - msTsLast), 3)
     
+    data = gpsCrt
+    
+    if perfRaw and len(perfRaw) >= 2:
+        rxBytes, txBytes = perfRaw[0:2]
+        intThrptLastRx = int(thrptLast[0])
+        intThrptLastTx = int(thrptLast[1])
+        if (intThrptLastRx + intThrptLastTx > 0):
+            rxThrpt = (int(rxBytes) - int(thrptLast[0])) / msElapsed
+            txThrpt = (int(txBytes) - int(thrptLast[1])) / msElapsed
+        else:
+            rxThrpt = 0
+            txThrpt = 0
+        
+        fmtRxThrpt = thrptFormat(rxThrpt)
+        fmtTxThrpt = thrptFormat(txThrpt)
+
+        data.extend([ fmtRxThrpt, fmtTxThrpt ])
+    else:
+        data.extend([ 0, 0 ])
+    
     if perfRaw and len(perfRaw) >= 9:
         wmac, ssid, bssid, signal, noise1, noise2, br = perfRaw[2:9]
         
@@ -270,24 +290,11 @@ def ARNPerfFormat(perfRaw, gpsCrt, msTsLast, thrptLast):
         br8m = 0.00
         if (br != 'unknown'):
             br8m = float(br)/20*8
-    
-    if perfRaw and len(perfRaw) >= 2:
-        rxBytes, txBytes = perfRaw[0:2]
-        intThrptLastRx = int(thrptLast[0])
-        intThrptLastTx = int(thrptLast[1])
-        if (intThrptLastRx + intThrptLastTx > 0):
-            rxThrpt = (int(rxBytes) - int(thrptLast[0])) / msElapsed
-            txThrpt = (int(txBytes) - int(thrptLast[1])) / msElapsed
-        else:
-            rxThrpt = 0
-            txThrpt = 0
         
-        fmtRxThrpt = thrptFormat(rxThrpt)
-        fmtTxThrpt = thrptFormat(txThrpt)
+        data.extend([ wmac, ssid, bssid, intSignal, intNoise, snr, br8m, msElapsed ])
+    else:
+        data.extend([ '-', '-', '-', -111, -111, 0, 0, 1 ])
 
-    data = gpsCrt
-    data.extend([ fmtRxThrpt, fmtTxThrpt ])
-    data.extend([ wmac, ssid, bssid, intSignal, intNoise, snr, br8m, msElapsed ])
     return data
 
 # display KPI
