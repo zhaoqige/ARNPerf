@@ -8,6 +8,7 @@ v7.1.1 2017.10.17           Handle no "gps.txt"
 v7.1.4 2017.10.18           Boya verified
 
 2017.10.17 final re-format
+2017.11.24 fix no "gps.txt" bug
 """
 
 import re
@@ -383,7 +384,10 @@ def GPSLocationRtRaw():
     except:
         print('error> NO GPS Sensor connected')
         
-    return gpsRaw[0:5]
+    if gpsRaw:
+        return gpsRaw[0:5]
+    
+    return None
 
 # return & validate GPS lat,lng
 def GPSLocationRt():
