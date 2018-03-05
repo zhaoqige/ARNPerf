@@ -17,12 +17,12 @@ class AppLog implements IApp
 {
 	private $_snrGroundFix = 8;
   private $_fixLat = 0.00125, $_fixLng = 0.00605; // v1.2.061117
-	
+
 	private $_fileHandle = null, $_filePath = './log/', $_filename = '', $_assort = 1;
 	private $_limitLineSizeMax = 1024;
-	
+
 	private $_pointStat = null;
-	
+
 	public function __construct($env = null)
 	{
 		if (is_array($env)) {
@@ -36,7 +36,7 @@ class AppLog implements IApp
 				$this->_limitSizeMax = $env['limit'];
 			}
 		}
-		
+
 		$this->_pointStat = array(
 				'bad' => 0,
 				'weak' => 0,
@@ -45,11 +45,11 @@ class AppLog implements IApp
 				'total' => 0
 		);
 	}
-	
+
 	public function exec($type = 1)
 	{
 		$_result = null;
-		
+
 		$error = '';
 		do { // start GOTO
 			// check if file exists
@@ -57,40 +57,48 @@ class AppLog implements IApp
 				$error = 'invalid file';
 				break;
 			}
-			
+
 			$this->_fileHandle = fopen($this->_filename, 'r');
 			if (! $this->_fileHandle) {
 				$error = 'cannot open file';
 				break;
 			}
-			
+
 			// prepare $_result;
 			$_result = array();
-			
+
 			$i = 0; $buffer = '';
 			$dev = $map = $line = array();
-			
+
 			do {
 				// parse line by line
 				$buffer = fgets($this->_fileHandle, $this->_limitLineSizeMax);
 				if (strstr($buffer, 'config')) {
 					$line = CSV::decode($buffer);
-					
+
 					list($mark, $config, $mac, $title, $note) = $line;
-					
+
 					$dev['mac'] = $mac;
 					$dev['title'] = $title;
 					$dev['note'] = $note;
-					
+
 				} else if (strstr($buffer, '+6w')) {
 					$line = CSV::decode($buffer);
-					list($mark, $ts, $bssid, $lat, $lng, $signal, $noise, $rx_thrpt, $rxmcs, $tx_thrpt, $txmcs, $speed) = $line;
-          
-          // v1.2.061117
-          if ($lat + $lng > 0) {
-            $lat += $this->_fixLat; $lng += $this->_fixLng; 
-          }
-					
+                    // compatible with different log format
+                    if (count($line) >= 12) {
+                        list($mark, $ts, $bssid, $lat, $lng, $signal, $noise,
+                            $rx_thrpt, $rxmcs, $tx_thrpt, $txmcs, $speed) = $line;
+                    } else {
+                        $txmcs = $rxmcs = -1;
+                        list($mar, $ts, $bssid, $lat, $lng, $signal, $noise,
+                            $rx_thrpt, $tx_thrpt, $speed) = $line;
+                    }
+
+                    // v1.2.061117
+                    if ($lat + $lng > 0) {
+                    $lat += $this->_fixLat; $lng += $this->_fixLng;
+                    }
+
 					// prepare for map center, zoom level
 					if ($i) {
 						if ($map['lat']['min'] > $lat) $map['lat']['min'] = $lat;
@@ -109,9 +117,9 @@ class AppLog implements IApp
 					// save point
 					$point = array(
 							'ts' => $ts,
-							'lat' => $lat, 
+							'lat' => $lat,
 							'lng' => $lng,
-              'bssid' => $bssid,
+                            'bssid' => $bssid,
 							'signal' => $signal,
 							'noise' => $noise,
 							'rx' => number_format((float) $rx_thrpt, 3),
@@ -120,44 +128,44 @@ class AppLog implements IApp
 							'txmcs' => $txmcs,
 							'speed' => $speed
 					);
-					
+
 					$this->calcPointStat($point);
 					$_result['data']['points'][] = $point;
-					
+
 					$i ++;
 				}
 			} while(! feof($this->_fileHandle));
-			
+
 			$_result['dev'] = $dev;
 			$_result['map'] = $this->calcMap($map);
 			$_result['data']['pstat'] = $this->_pointStat;
-			
+
 			// clean up
 			fclose($this->_fileHandle);
-			
+
 		} while(0); // end GOTO
-		
+
 		if ($error) {
 			$_result = array('err' => $error);
 		}
-		
+
 		// debug use only
 		//var_dump($_result);
-		
+
 		return $_result;
 	}
-	
+
 	private function calcMap($map)
 	{
 		$_result = array();
-		
+
 		$latMin = $map['lat']['min']; $latMax = $map['lat']['max'];
 		$lngMin = $map['lng']['min']; $lngMax = $map['lng']['max'];
 
 		$latGap = $latMax - $latMin;
 		$lngGap = $lngMax - $lngMin;
 		$gap = max($latGap, $lngGap);
-		
+
 		// FIXME: zoom level calibrate
 		$zoom = 16;
 		if ($gap < 0.12)	$zoom = 14;
@@ -165,7 +173,7 @@ class AppLog implements IApp
 		if ($gap < 0.03) 	$zoom = 16;
 		if ($gap < 0.004) 	$zoom = 17;
 		if ($gap < 0.0003) 	$zoom = 18;
-		
+
 		$_result['center']['lat'] = ($latMin + $latMax) / 2;
 		$_result['center']['lng'] = ($lngMin + $lngMax) / 2;
 
@@ -173,14 +181,14 @@ class AppLog implements IApp
 		$_result['lat']['max'] = (float) number_format($latMax, 8);
 		$_result['lng']['min'] = (float) number_format($lngMin, 8);
 		$_result['lng']['max'] = (float) number_format($lngMax, 8);
-    
+
 		$_result['gap']['lat'] = (float) number_format($latGap, 8);
 		$_result['gap']['lng'] = (float) number_format($lngGap, 8);
 		$_result['zoom'] = $zoom;
-		
+
 		return $_result;
 	}
-	
+
 	private function calcPointStat(& $point)
 	{
 		$level = 0;
@@ -199,7 +207,7 @@ class AppLog implements IApp
 				$level = $this->calcPointByThrpt($point);
 				break;
 		}
-		
+
 		if ($level >= 7) 	$level = 7;
 		if ($level < 0)		$level = 0;
 		switch($level) {
@@ -224,11 +232,11 @@ class AppLog implements IApp
 		$point['level'] = $level;
 		$this->_pointStat['total'] ++; // total
 	}
-	
+
 	private function calcPointByThrpt($point)
 	{
 		$level = 0;
-		
+
 		$thrpt = $point['tx'] + $point['rx'];
 		if ($thrpt < 0.3)						$level = 0;
 		if ($thrpt >= 0.3 && $thrpt < 0.8) 		$level = 1;
@@ -238,17 +246,17 @@ class AppLog implements IApp
 		if ($thrpt >= 2.5 && $thrpt < 3.0) 		$level = 5;
 		if ($thrpt >= 3.0 && $thrpt < 4.0) 		$level = 6;
 		if ($thrpt >= 4.0) 						$level = 7;
-		
+
 		return $level;
 	}
-	
+
 	private function calcPointBySNR($point)
 	{
 		$snr = $point['signal'] - $point['noise'];
-		
+
 		// snr calibrate
-		$snr -= $this->_snrGroundFix; 
-		
+		$snr -= $this->_snrGroundFix;
+
 		$level = 0;
 		if ($snr < 6) 							$level = 0;
 		if ($snr >= 6 && $snr < 12) 			$level = 1;
@@ -258,13 +266,13 @@ class AppLog implements IApp
 		if ($snr >= 30 && $snr < 36) 			$level = 5;
 		if ($snr >= 36 && $snr < 42) 			$level = 6;
 		if ($snr >= 42) 						$level = 7;
-		
+
 		return $level;
 	}
 	private function calcPointByNoise($point)
 	{
 		$noise = $point['noise'];
-		
+
 		$level = 0;
 		if ($noise >= -60) 						$level = 0;
 		if ($noise < -60 && $noise >= -70) 		$level = 2;
@@ -272,7 +280,7 @@ class AppLog implements IApp
 		if ($noise < -80 && $noise >= -90) 		$level = 4;
 		if ($noise < -90 && $noise >= -95) 		$level = 5;
 		if ($noise < -95)				 		$level = 6;
-		
+
 		return $level;
 	}
 	private function calcPointByPER($point)
