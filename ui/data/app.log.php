@@ -15,8 +15,11 @@ require_once 'data.csv.php';
  */
 class AppLog implements IApp
 {
+	//private $_snrGroundFix = 0;
 	private $_snrGroundFix = 8;
-  private $_fixLat = 0.00125, $_fixLng = 0.00605; // v1.2.061117
+	private $_fixLat = 0.00125, $_fixLng = 0.00605; // v1.2.061117
+	//private $_fixLat = -0.0035, $_fixLng = 0.003993; // v20180331 Fujian Ningde
+	//private $_fixLat = -0.0030, $_fixLng = 0.0052; // 20180427 Shaoguan
 
 	private $_fileHandle = null, $_filePath = './log/', $_filename = '', $_assort = 1;
 	private $_limitLineSizeMax = 1024;
@@ -237,16 +240,32 @@ class AppLog implements IApp
 	{
 		$level = 0;
 
-		$thrpt = $point['tx'] + $point['rx'];
-		if ($thrpt < 0.3)						$level = 0;
-		if ($thrpt >= 0.3 && $thrpt < 0.8) 		$level = 1;
-		if ($thrpt >= 0.8 && $thrpt < 1.5) 		$level = 2;
-		if ($thrpt >= 1.5 && $thrpt < 2.0) 		$level = 3;
-		if ($thrpt >= 2.0 && $thrpt < 2.5) 		$level = 4;
-		if ($thrpt >= 2.5 && $thrpt < 3.0) 		$level = 5;
-		if ($thrpt >= 3.0 && $thrpt < 4.0) 		$level = 6;
-		if ($thrpt >= 4.0) 						$level = 7;
 
+		// v20180331 BW=16M
+		//*
+		// FOR 8M
+		if ($thrpt < 0.5)						$level = 0;
+		if ($thrpt >= 0.5 && $thrpt < 2)		$level = 1;
+		if ($thrpt >= 2 && $thrpt < 5)			$level = 2;
+		if ($thrpt >= 5 && $thrpt < 10)			$level = 3;
+		if ($thrpt >= 10 && $thrpt < 15)		$level = 4;
+		if ($thrpt >= 15 && $thrpt < 25)		$level = 5;
+		if ($thrpt >= 25 && $thrpt < 40)		$level = 6;
+		if ($thrpt >= 40)						$level = 7;
+		//*/
+
+		/*
+		// FOR 24M
+		if ($thrpt < 3)							$level = 0;
+		if ($thrpt >= 3 && $thrpt < 8)			$level = 1;
+		if ($thrpt >= 8 && $thrpt < 15)			$level = 2;
+		if ($thrpt >= 15 && $thrpt < 20)		$level = 3;
+		if ($thrpt >= 20 && $thrpt < 25)		$level = 4;
+		if ($thrpt >= 25 && $thrpt < 30)		$level = 5;
+		if ($thrpt >= 30 && $thrpt < 40)		$level = 6;
+		if ($thrpt >= 40)						$level = 7;
+		*/
+		
 		return $level;
 	}
 
@@ -274,12 +293,12 @@ class AppLog implements IApp
 		$noise = $point['noise'];
 
 		$level = 0;
-		if ($noise >= -60) 						$level = 0;
+		if ($noise >= -60) 						$level = 1;
 		if ($noise < -60 && $noise >= -70) 		$level = 2;
 		if ($noise < -70 && $noise >= -80) 		$level = 3;
 		if ($noise < -80 && $noise >= -90) 		$level = 4;
 		if ($noise < -90 && $noise >= -95) 		$level = 5;
-		if ($noise < -95)				 		$level = 6;
+		if ($noise < -95)						$level = 6;
 
 		return $level;
 	}
